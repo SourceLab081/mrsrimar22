@@ -266,10 +266,12 @@
 			compatible = "android,firmware";
 			vbmeta {
 				compatible="android,vbmeta";
-				parts = "vbmeta,boot,system,vendor,dtbo";
+				parts = "vbmeta,boot,system,vendor,dtbo,recovery";
 			};
+
 		};
 	};
+	/delete-node/ android;
 
 	reserved_memory: reserved-memory {
 		#address-cells = <2>;
@@ -397,11 +399,6 @@
 			label = "cont_splash_region";
 		};
 
-		disp_rdump_memory: disp_rdump_region@5c000000 {
-			reg = <0x0 0x5c000000 0x0 0x00f00000>;
-			label = "disp_rdump_region";
-		};
-
 		dfps_data_memory: dfps_data_region@5cf00000 {
 			reg = <0x0 0x5cf00000 0x0 0x0100000>;
 			label = "dfps_data_region";
@@ -434,7 +431,7 @@
 	};
 
 	chosen {
-		bootargs = "rcupdate.rcu_expedited=1 rcu_nocbs=0-7 kpti=off";
+		bootargs = "rcu_nocbs=0-7 kpti=off noirqdebug quiet";
 	};
 
 	soc: soc { };

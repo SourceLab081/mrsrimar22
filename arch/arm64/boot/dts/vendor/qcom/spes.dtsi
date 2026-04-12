@@ -1,6 +1,6 @@
 #include "khaje-idp.dtsi"
 
-&dsi_td4330_truly_v2_video {
+/*&dsi_td4330_truly_v2_video {
 	/delete-property/ qcom,esd-check-enabled;
 };
 
@@ -10,11 +10,7 @@
 
 &dsi_nt36672e_fhd_plus_90hz_video {
 	/delete-property/ qcom,esd-check-enabled;
-};
-
-&dsi_nt36672e_fhd_plus_120hz_video {
-	/delete-property/ qcom,esd-check-enabled;
-};
+}; */
 
 &qupv3_se2_i2c {
 	synaptics_tcm@20 {
@@ -26,18 +22,19 @@
 	};
 };
 
+///device specific-prop
 &qupv3_se4_2uart {
-	status = "ok";
+      status = "ok";
 };
 
 &tlmm {
-	/* Max77729 */
-	max_int_default: max_int_default {
+/* Max77729 */
+	max_int_default:max_int_default {
 		mux {
-			pins = "gpio105";
+			pins = "gpio105";		
 			function = "gpio";
 		};
-
+				
 		config {
 			pins = "gpio105";
 			bias-disable;
@@ -46,12 +43,12 @@
 	};
 
 	maxim_int_active {
-		max_int_active: max_int_active {
+	max_int_active:max_int_active {
 			mux {
 				pins = "gpio105";
 				function = "gpio";
-			};
-
+			};	
+	
 			config {
 				pins = "gpio105";
 				drive-strength = <8>;
@@ -62,12 +59,12 @@
 	};
 
 	maxim_int_suspend {
-		max_int_suspend: max_int_suspend {
+	max_int_suspend:max_int_suspend {
 			mux {
-				pins = "gpio105";
+				pins = "gpio105";			
 				function = "gpio";
 			};
-
+			
 			config {
 				pins = "gpio105";
 				drive-strength = <2>;
@@ -76,62 +73,17 @@
 			};
 		};
 	};
-
-	/* sc8551-charger */
-	sc8551_int_default: sc8551_int_default {
-		mux {
-			pins = "gpio84";
-			function = "gpio";
-		};
-
-		config {
-			pins = "gpio84";
-			drive-strength = <2>;
-			bias-pull-up;
-			input-enable;
-		};
-	};
-
-	/* Onewire */
-	onewire_gpio_active: onewire_gpio_active {
-		mux {
-			pins = "gpio108";
-			function = "gpio";
-		};
-
-		config {
-			pins = "gpio108";
-			drive-strength = <2>;
-			bias-pull-up;
-		};
-	};
-
-	onewire_gpio_sleep: onewire_gpio_sleep {
-		mux {
-			pins = "gpio108";
-			function = "gpio";
-		};
-
-		config {
-			pins = "gpio108";
-			drive-strength = <2>;
-			bias-pull-up;
-		};
-	};
 };
 
 &qupv3_se1_i2c {
-	status = "ok";
-	#address-cells = <1>;
-	#size-cells = <0>;
-
-	/* MUIC + USBC + Charger + Fuel gauge */
-	muic: max77729@66 {
+			status = "ok";
+muic:
+	max77729@66 {
 		status = "okay";
 		compatible = "maxim,max77729";
 		reg = <0x66>;
 		interrupt-parent = <&tlmm>;
-		interrupts = <105 8>;
+		interrupts = <0x69 0x08>;
 		pinctrl-names = "maxim_int_default";
 		pinctrl-0 = <&max_int_default>;
 		max77729,irq-gpio = <&tlmm 105 8>;
@@ -139,7 +91,7 @@
 		max77729,fw_product_id = <3>;
 		max77729,bc1p2_retry_count = <2>;
 		max77729,snkcap_data = [04 2c 91 01 36 c8 d0 02 00 c8 90 41 8b 2f 21 dc c0];
-
+		
 		max77729-usbc {
 			compatible = "maxim,max77729-usbc";
 		};
@@ -177,7 +129,17 @@
 			fuelgauge,lost_soc_guarantee_soc = <30>;
 			fuelgauge,lost_soc_min_vol = <3200>;
 			battery,shutdown-delay-enable;
-			fuelgauge,soc_decimal_rate = <0 38 10 35 20 33 30 33 40 33 50 33 60 33 70 30 80 25 90 20 95 10>;
+			fuelgauge,soc_decimal_rate = <0 38
+				10 35 
+				20 33 
+				30 33 
+				40 33 
+				50 33
+				60 33 
+				70 30 
+				80 25 
+				90 20 
+				95 10>;
 
 			battery_params {
 				battery1,v_empty = <43620>;
@@ -196,7 +158,34 @@
 		};
 	};
 
-	/* CP pumper */
+};
+
+&usb0 {
+    extcon = <&muic &eud>;
+};
+
+&tlmm {
+/* sc8551-charger */
+	sc8551_int_default: sc8551_int_default {
+			mux {
+				pins = "gpio84";
+				function = "gpio";
+			};
+			
+			config {
+				pins = "gpio84";
+				drive-strength = <2>;
+				bias-pull-up;
+				input-enable;
+			};
+		};
+};
+
+&qupv3_se1_i2c {
+			status = "ok";
+			#address-cells = <1>;
+			#size-cells = <0>;
+
 	sc8551-charger@65 {
 		compatible = "sc,sc8551-standalone";
 		reg = <0x65>;
@@ -204,7 +193,6 @@
 		interrupts = <84 0>;
 		pinctrl-names = "default";
 		pinctrl-0 = <&sc8551_int_default>;
-		intr-gpios = <&tlmm 84 0>;
 		sc,sc8551,bat-therm-disable = <0>;
 		sc,sc8551,bus-therm-disable = <0>;
 		sc,sc8551,bat-ovp-threshold = <4525>;
@@ -225,7 +213,8 @@
 };
 
 &soc {
-	nopmi_chg: qcom,nopmi-chg {
+nopmi_chg:
+        qcom,nopmi-chg {
 		compatible = "qcom,nopmi-chg";
 		status = "okay";
 		qcom,fv-max-uv = <4400000>;
@@ -240,10 +229,10 @@
 		jeita_temp_below_t0_cv = <4450>;
 		temp_t4_thres = <60>;
 		temp_t4_thres_minus_x_degree = <58>;
-		temp_t3_thres = <48>;
+		temp_t3_thres = <0x30>;
 		temp_t3_thres_minus_x_degree = <46>;
 		temp_t2_thres = <15>;
-		temp_t2_thres_plus_x_degree = <17>;
+		temp_t2_thres_plus_x_degree = <0x11>;
 		temp_t1p5_thres = <10>;
 		temp_t1p5_thres_plus_x_degree = <11>;
 		temp_t1_thres = <5>;
@@ -254,15 +243,16 @@
 		temp_tn1_thres_plus_x_degree = <0xfffffff7>;
 		temp_neg_10_thres = <0xfffffff6>;
 		temp_t3_to_t4_fcc = <2350>;
-		temp_t2_to_t3_fcc = <5950>;
+		temp_t2_to_t3_fcc = <0x173e>;
 		temp_t1p5_to_t2_fcc = <3900>;
 		temp_t1_to_t1p5_fcc = <2400>;
 		temp_t0_to_t1_fcc = <950>;
 		temp_tn1_to_t0_fcc = <490>;
-		nopmi,thermal-mitigation = <5950000 5400000 5000000 4500000 4000000 3700000 3500000 3000000 2800000 2500000 2000000 1500000 1000000 800000 500000 300000>;
+		nopmi,thermal-mitigation = <5950000 5400000 5000000 4500000 4000000 3700000 3500000 3000000 2800000 2500000 2000000 1500000 1000000 800000 500000  300000>;
 	};
 
-	onewire_gpio: onewire_gpio {
+onewire_gpio:
+	onewire_gpio {
 		compatible = "xiaomi,onewire_gpio";
 		label = "xm_onewire";
 		xiaomi,version = <1>;
@@ -272,26 +262,45 @@
 		pinctrl-names = "onewire_active", "onewire_sleep";
 		pinctrl-0 = <&onewire_gpio_active>;
 		pinctrl-1 = <&onewire_gpio_sleep>;
-		status = "okay";
+		status = "ok";
 	};
-
-	maxim_ds28e16: maxim_ds28e16 {
+	
+maxim_ds28e16:
+        maxim_ds28e16 {
 		compatible = "maxim,ds28e16";
 		label = "max_ds28e16";
 		maxim,version = <1>;
-		xiaomi,onewire-bus = "xm_onewire";
-		status = "okay";
-	};
-
-	cp_manager: cp_manager {
-		compatible = "xiaomi,cp_manager";
-		label = "cp_manager";
-		status = "okay";
+		status = "ok";
 	};
 };
 
-&usb0 {
-	extcon = <&muic &eud>;
+&tlmm {
+/* Onewire */
+	onewire_gpio_active: onewire_gpio_active {
+			mux {
+				pins = "gpio108";
+				function = "gpio";
+			};			
+
+			config {
+				pins = "gpio108";
+				drive-strength = <2>;
+				bias-pull-up;
+			};
+		};
+
+	onewire_gpio_sleep: onewire_gpio_sleep {
+			mux {
+				pins = "gpio108";
+				function = "gpio";
+			};
+	
+			config {
+				pins = "gpio108";
+				drive-strength = <2>;
+				bias-pull-up;
+			};
+		};
 };
 
 &sdhc_2 {

@@ -178,6 +178,7 @@
 		"IN1_HPHL", "HPHL_OUT",
 		"IN2_HPHR", "HPHR_OUT",
 		"IN3_AUX", "AUX_OUT",
+		"SpkrMono WSA_IN", "AUX",
 		"TX SWR_MIC0", "ADC1_OUTPUT",
 		"TX SWR_MIC4", "ADC2_OUTPUT",
 		"TX SWR_MIC5", "ADC3_OUTPUT",
@@ -235,7 +236,7 @@
 	asoc-codec-names = "msm-stub-codec.1", "bolero_codec";
 	qcom,wsa-max-devs = <0>;
 	qcom,wsa-devs = <0>;
-	//qcom,wsa-aux-dev-prefix = "SpkrMono";
+	qcom,wsa-aux-dev-prefix = "SpkrMono";
 	qcom,codec-max-aux-devs = <1>;
 	qcom,codec-aux-devs = <&wcd937x_codec>;
 	qcom,msm_audio_ssr_devs = <&audio_apr>, <&q6core>, <&bolero>,
@@ -250,32 +251,30 @@
 		clocks = <&wsa881x_analog_clk 0>;
 		qcom,wsa-analog-clk-gpio = <&wsa881x_analog_clk_gpio>;
 		qcom,wsa-analog-reset-gpio = <&wsa881x_analog_reset_gpio>;
-		status = "disabled";
+                status = "disable";
 	};
 
 	wsa881x_i2c_44: wsa881x-i2c-codec@44 {
 		compatible = "qcom,wsa881x-i2c-codec";
 		reg = <0x044>;
-		status = "disabled";
+	        status = "disable";
 	};
 
-	fsa4480: fsa4480@42 {
-		status = "disabled";
-	};
-
-	aw87xxx_pa_5b@5b {
-		compatible = "awinic,aw87xxx_pa";
-		reg = <0x5b>;
-		reset-gpio = <&tlmm 35 0>;
-		dev_index = <0>;
-		status = "okay";
+fsa4480:
+	fsa4480@42 {
+		status = "disable";
 	};
 
 	aw87xxx_pa_58@58 {
 		compatible = "awinic,aw87xxx_pa";
 		reg = <0x58>;
-		reset-gpio = <&tlmm 106 0>;
-		dev_index = <1>;
+		dev_index = <0>;
+		status = "okay";
+	};
+
+	fs15xx@34 {
+		compatible = "foursemi,fs15xx";
+		reg = <0x34>;
 		status = "okay";
 	};
 };
@@ -293,12 +292,7 @@
 		pinctrl-names = "aud_active", "aud_sleep";
 		pinctrl-0 = <&spkr_1_sd_n_active>;
 		pinctrl-1 = <&spkr_1_sd_n_sleep>;
-	};
-
-	aw87xxx_pa_reset_gpio {
-		compatible = "longcheer,lct_pinctrl";
-		audio-reset-pin = <&wsa881x_analog_reset_gpio>;
-		status = "okay";
+		status = "disable";
 	};
 
 	wsa881x_analog_clk: wsa_ana_clk {
@@ -307,7 +301,7 @@
 		qcom,codec-lpass-ext-clk-freq = <9600000>;
 		qcom,codec-lpass-clk-id = <0x301>;
 		#clock-cells = <1>;
-		status = "disabled";
+	        status = "disable";
 	};
 
 	clock_audio_rx_1: rx_core_clk {
