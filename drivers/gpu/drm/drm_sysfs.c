@@ -1,4 +1,5 @@
 
+
 /*
  * drm_sysfs.c - Modifications to drm_sysfs_class.c to support
  *               extra sysfs attribute from DRM. Normal drm_sysfs_class
@@ -237,6 +238,7 @@ static ssize_t panel_info_show(struct device *device,
 {
 	int written = 0;
 	char pname[128] = {0};
+	char pname_temp[128] = {0};
 	struct drm_connector *connector = NULL;
 	struct drm_encoder *encoder = NULL;
 	struct drm_bridge *bridge = NULL;
@@ -265,7 +267,15 @@ static ssize_t panel_info_show(struct device *device,
 				(written - 10) > 32 ? 32 : (written - 10),
 				pname + 10);
 #else
-	return snprintf(buf, PAGE_SIZE, "panel_name=%s\n", pname);
+	//this is for redmi 10C
+	if (written)
+	{
+		strncpy(pname_temp, pname+10, 33);
+		pname_temp[34] = '\0';
+		return snprintf(buf, PAGE_SIZE, "panel_name=%s_display\n", pname_temp);
+	}
+	return written;
+	//return snprintf(buf, PAGE_SIZE, "panel_name=%s\n", pname);
 #endif
 
 	return snprintf(buf, PAGE_SIZE, "panel_name=%s\n", pname);
