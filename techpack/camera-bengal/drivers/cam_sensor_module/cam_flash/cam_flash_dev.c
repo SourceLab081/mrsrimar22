@@ -9,6 +9,15 @@
 #include "cam_flash_core.h"
 #include "cam_common_util.h"
 
+/* Spes flashlight by muralivijay@github */
+#ifdef CONFIG_CAMERA_FLASH_SPES
+struct gpio_flash_led mgpio_flash_led = {
+        .flash_en = 0,
+        .flash_now = 0,
+};
+#endif
+/* Spes flashlight by muralivijay@github */
+
 static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 		void *arg, struct cam_flash_private_soc *soc_private)
 {
@@ -126,10 +135,15 @@ static int32_t cam_flash_driver_cmd(struct cam_flash_ctrl *fctrl,
 			CAM_WARN(CAM_FLASH,
 				"Failed in destroying the device Handle");
 
+#ifdef CONFIG_CAMERA_FLASH_SPES
 		if (fctrl->func_tbl.power_ops) {
 			if (fctrl->func_tbl.power_ops(fctrl, false))
 				CAM_WARN(CAM_FLASH, "Power Down Failed");
 		}
+#else
+		if (fctrl->func_tbl.power_ops(fctrl, false))
+			CAM_WARN(CAM_FLASH, "Power Down Failed");
+#endif
 
 		fctrl->streamoff_count = 0;
 		fctrl->flash_state = CAM_FLASH_STATE_INIT;
@@ -328,9 +342,7 @@ static int cam_flash_platform_remove(struct platform_device *pdev)
 	mutex_lock(&fctrl->flash_mutex);
 	cam_flash_shutdown(fctrl);
 	mutex_unlock(&fctrl->flash_mutex);
-	cam_flash_gpio_cleanup(fctrl);
 	cam_unregister_subdev(&(fctrl->v4l2_dev_str));
-	mutex_destroy(&fctrl->gpio_state_lock);
 	platform_set_drvdata(pdev, NULL);
 	v4l2_set_subdevdata(&fctrl->v4l2_dev_str.sd, NULL);
 	kfree(fctrl);
@@ -417,6 +429,10 @@ static int32_t cam_flash_platform_probe(struct platform_device *pdev)
 	struct cam_flash_ctrl *fctrl     = NULL;
 	struct device_node *of_parent    = NULL;
 	struct cam_hw_soc_info *soc_info = NULL;
+/* Spes flashlight by muralivijay@github */
+#ifdef CONFIG_CAMERA_FLASH_SPES
+        struct device_node *gnode = pdev->dev.of_node; //store qcom-flash-gpios
+#endif
 
 	CAM_DBG(CAM_FLASH, "Enter");
 	if (!pdev->dev.of_node) {
@@ -516,26 +532,35 @@ static int32_t cam_flash_platform_probe(struct platform_device *pdev)
 		/* PMIC Flash */
 		fctrl->func_tbl.parser = cam_flash_pmic_pkt_parser;
 		fctrl->func_tbl.apply_setting = cam_flash_pmic_apply_setting;
+#ifdef CONFIG_CAMERA_FLASH_SPES
 		fctrl->func_tbl.power_ops = NULL;
+#else
+		fctrl->func_tbl.power_ops = cam_flash_pmic_power_ops;
+#endif
 		fctrl->func_tbl.flush_req = cam_flash_pmic_flush_request;
 	}
 
-	mutex_init(&fctrl->gpio_state_lock);
-	fctrl->gpio_state.gpio[0] = fctrl->gpio_state.gpio[1] = -1;
-	fctrl->gpio_state.value[0] = fctrl->gpio_state.value[1] = -1;
-	fctrl->gpio_state.owns[0] = fctrl->gpio_state.owns[1] = false;
+/* Spes flashlight by muralivijay@github */
+#ifdef CONFIG_CAMERA_FLASH_SPES
+                // Get flash_en GPIO
+                /*Xiaomi added tlmm 85 pin in dts used as flash mode in camera */
+                mgpio_flash_led.flash_en = of_get_named_gpio(gnode, "qcom,flash-gpios", 0);
+                if (!gpio_is_valid(mgpio_flash_led.flash_en)) {
+                // Handle error if GPIO is not valid
+                CAM_ERR(CAM_FLASH, "Invalid GPIO for flash_en");
+               }
+                CAM_INFO(CAM_FLASH, "flash_en GPIO: %d", mgpio_flash_led.flash_en);
 
-	fctrl->gpio_state.gpio[0] = of_get_named_gpio(pdev->dev.of_node, "qcom,flash-gpios", 0);
-	if (!gpio_is_valid(fctrl->gpio_state.gpio[0])) {
-		CAM_WARN(CAM_FLASH, "flash_en (idx0) invalid %d", fctrl->gpio_state.gpio[0]);
-		fctrl->gpio_state.gpio[0] = -1;
-	}
-
-	fctrl->gpio_state.gpio[1] = of_get_named_gpio(pdev->dev.of_node, "qcom,flash-gpios", 1);
-	if (!gpio_is_valid(fctrl->gpio_state.gpio[1])) {
-		CAM_WARN(CAM_FLASH, "flash_now (idx1) invalid %d", fctrl->gpio_state.gpio[1]);
-		fctrl->gpio_state.gpio[1] = -1;
-	}
+                // Get flash_now GPIO
+                /*Xiaomi added pm6125_gpios 2 pin in dts  mainly used as torch mode */
+                mgpio_flash_led.flash_now = of_get_named_gpio(gnode, "qcom,flash-gpios", 1);
+                if (!gpio_is_valid(mgpio_flash_led.flash_now)) {
+                // Handle error if GPIO is not valid
+                CAM_ERR(CAM_FLASH, "Invalid GPIO for flash_en");
+               }
+                CAM_INFO(CAM_FLASH, "flash_now GPIO: %d", mgpio_flash_led.flash_now);
+#endif
+/* Spes flashlight by muralivijay@github */
 
 	rc = cam_flash_init_subdev(fctrl);
 	if (rc) {
@@ -563,7 +588,6 @@ free_cci_resource:
 	kfree(fctrl->io_master_info.cci_client);
 	fctrl->io_master_info.cci_client = NULL;
 free_resource:
-	mutex_destroy(&fctrl->gpio_state_lock);
 	kfree(fctrl->i2c_data.per_frame);
 	kfree(fctrl->soc_info.soc_private);
 	cam_soc_util_release_platform_resource(&fctrl->soc_info);

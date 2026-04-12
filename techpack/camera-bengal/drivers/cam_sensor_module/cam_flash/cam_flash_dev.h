@@ -156,17 +156,13 @@ struct cam_flash_func_tbl {
 		enum cam_flash_flush_type type, uint64_t req_id);
 };
 
-/**
- *  struct cam_flash_gpio_state
- * gpio    gpio[0] = flash_en, gpio[1] = flash_now
- * value   last set value
- * owns    ownership flag
- */
-struct cam_flash_gpio_state {
-	int gpio[2];
-	int value[2];
-	bool owns[2];
+/* Spes flashlight by muralivijay@github */
+#ifdef CONFIG_CAMERA_FLASH_SPES
+struct gpio_flash_led {
+        int flash_en;
+        int flash_now;
 };
+#endif
 
 /**
  *  struct cam_flash_ctrl
@@ -227,8 +223,6 @@ struct cam_flash_ctrl {
 	uint32_t                            last_flush_req;
 	uint32_t                            streamoff_count;
 	int32_t                             apply_streamoff;
-	struct cam_flash_gpio_state         gpio_state;
-	struct mutex                        gpio_state_lock;
 };
 
 int cam_flash_pmic_pkt_parser(struct cam_flash_ctrl *fctrl, void *arg);
@@ -246,8 +240,5 @@ int cam_flash_pmic_flush_request(struct cam_flash_ctrl *fctrl,
 	enum cam_flash_flush_type, uint64_t req_id);
 void cam_flash_shutdown(struct cam_flash_ctrl *fctrl);
 int cam_flash_release_dev(struct cam_flash_ctrl *fctrl);
-int cam_flash_gpio_set(struct cam_flash_ctrl *fctrl, int idx, int val);
-void cam_flash_gpio_free(struct cam_flash_ctrl *fctrl, int idx);
-void cam_flash_gpio_cleanup(struct cam_flash_ctrl *fctrl);
 
 #endif /*_CAM_FLASH_DEV_H_*/

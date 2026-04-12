@@ -19,7 +19,7 @@ LINUXINCLUDE    += \
 		-include $(srctree)/techpack/camera-bengal/config/khajecameraconf.h
 endif
 
-ifeq ($(CONFIG_TARGET_PROJECT_K7T), y)
+ifeq ($(CONFIG_ARCH_KHAJE), y)
 LINUXINCLUDE    += \
 		-include $(srctree)/techpack/camera-bengal/config/legacycameraconf.h
 endif

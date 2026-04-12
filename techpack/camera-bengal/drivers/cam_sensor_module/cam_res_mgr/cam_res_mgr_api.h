@@ -100,6 +100,7 @@ int cam_res_mgr_shared_pinctrl_post_init(void);
 int cam_res_mgr_gpio_request(struct device *dev, unsigned int gpio,
 		unsigned long flags, const char *label);
 
+#ifdef CONFIG_CAMERA_FLASH_SPES
 /**
  * @brief: Free a GPIO
  *
@@ -111,6 +112,7 @@ int cam_res_mgr_gpio_request(struct device *dev, unsigned int gpio,
  * @return Status of operation. Negative in case of error. Zero otherwise.
  */
 void cam_res_mgr_gpio_free(struct device *dev, uint gpio);
+#endif
 
 /**
  * @brief: Free a array GPIO
