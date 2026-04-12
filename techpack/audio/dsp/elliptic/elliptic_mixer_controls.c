@@ -22,6 +22,39 @@ struct elliptic_system_configuration {
 
 struct elliptic_system_configuration elliptic_system_configuration;
 
+
+struct elliptic_system_configuration_parameter {
+	enum elliptic_system_configuration_parameter_type type;
+	union {
+		int32_t speaker_scaling[2];
+		int32_t sensitivity;
+		int32_t latency;
+		int32_t microphone_index;
+		int32_t operation_mode;
+		int32_t operation_mode_flags;
+		int32_t component_gain_change;
+		int32_t calibration_state;
+		int32_t engine_version;
+		int32_t calibration_profile;
+		int32_t ultrasound_gain;
+		int32_t	log_level;
+		int32_t custom_setting;
+		int32_t engine_suspend;
+		int32_t input_enabled;
+		int32_t output_enabled;
+		int32_t external_event;
+		struct {
+			int32_t calibration_method;
+			int32_t calibration_timestamp;
+		};
+		int32_t debug_mode;
+		int32_t context;
+		int32_t capture;
+		int32_t input_channels;
+		int32_t re_send;
+	};
+};
+
 struct elliptic_system_configuration_parameters_cache
 		elliptic_system_configuration_cache = { {0}, 0 };
 
@@ -36,13 +69,13 @@ struct elliptic_engine_calibration_data {
 
 static struct elliptic_engine_calibration_data
 	elliptic_engine_calibration_data_cache = { .reserved = {
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef
-	} };
+
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef } };
 
 struct elliptic_engine_calibration_v2_data {
 	union {
@@ -53,55 +86,55 @@ struct elliptic_engine_calibration_v2_data {
 static struct elliptic_engine_calibration_v2_data
 	elliptic_engine_calibration_v2_data_cache = { .reserved = {
 
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
 
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
 
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
 
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
 
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
 
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
 
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
-		0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
-		0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-		0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
-		0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
-	} };
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad,
+0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde,
+0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe,
+0xef, 0xde, 0xad, 0xbe, 0xef, 0xde, 0xad, 0xbe, 0xef,
+} };
 
 struct elliptic_engine_diagnostics_data {
 	union {
@@ -121,7 +154,8 @@ struct elliptic_engine_ml_data {
 };
 
 static struct elliptic_engine_ml_data
-	elliptic_engine_ml_data_cache = { .reserved = {0} };
+	elliptic_engine_ml_data_cache
+		= { .reserved = {0} };
 
 struct elliptic_engine_sensor_data {
 	union {
@@ -150,6 +184,7 @@ static struct elliptic_engine_tag_info
 static struct elliptic_shared_data_block shared_data_blocks[] = {
 	{ ELLIPTIC_OBJ_ID_CALIBRATION_DATA, ELLIPTIC_CALIBRATION_DATA_SIZE,
 		&elliptic_engine_calibration_data_cache },
+
 	{ ELLIPTIC_OBJ_ID_VERSION_INFO, ELLIPTIC_VERSION_INFO_SIZE,
 		&elliptic_engine_version_cache },
 	{ ELLIPTIC_OBJ_ID_BRANCH_INFO, ELLIPTIC_BRANCH_INFO_MAX_SIZE,
@@ -161,7 +196,8 @@ static struct elliptic_shared_data_block shared_data_blocks[] = {
 		&elliptic_engine_diagnostics_data_cache },
 	{ ELLIPTIC_OBJ_ID_TAG_INFO, ELLIPTIC_TAG_INFO_SIZE,
 		&elliptic_engine_tag_cache },
-	{ ELLIPTIC_OBJ_ID_ML_DATA, ELLIPTIC_ML_DATA_SIZE,
+	{ ELLIPTIC_OBJ_ID_ML_DATA,
+		ELLIPTIC_ML_DATA_SIZE,
 		&elliptic_engine_ml_data_cache },
 };
 
@@ -171,7 +207,7 @@ void elliptic_set_calibration_data(uint8_t *calib_data, size_t size)
 
 	if (size == ELLIPTIC_CALIBRATION_DATA_SIZE) {
 		calibration_obj = elliptic_get_shared_obj(
-				ELLIPTIC_OBJ_ID_CALIBRATION_DATA);
+			ELLIPTIC_OBJ_ID_CALIBRATION_DATA);
 		memcpy((uint8_t *)&elliptic_engine_calibration_data_cache,
 			calib_data, size);
 	}
@@ -196,10 +232,10 @@ void elliptic_set_diagnostics_data(uint8_t *diag_data, size_t size)
 	if (size <= ELLIPTIC_DIAGNOSTICS_DATA_SIZE) {
 		diagnostics_obj =
 			elliptic_get_shared_obj(
-					ELLIPTIC_OBJ_ID_DIAGNOSTICS_DATA);
+				ELLIPTIC_OBJ_ID_DIAGNOSTICS_DATA);
 		if (diagnostics_obj == NULL) {
-			EL_PRINT_E(
-				"el..set_diagnostics_data() NULL (%zu)", size);
+			EL_PRINT_E("el..set_diagnostics_data() NULL (%zu)",
+				size);
 			return;
 		}
 		memcpy((uint8_t *)&elliptic_engine_diagnostics_data_cache,
@@ -211,8 +247,9 @@ void elliptic_set_diagnostics_data(uint8_t *diag_data, size_t size)
 static const size_t NUM_SHARED_RW_OBJS =
 	sizeof(shared_data_blocks) / sizeof(struct elliptic_shared_data_block);
 
-struct elliptic_shared_data_block *elliptic_get_shared_obj(uint32_t object_id)
-{
+struct elliptic_shared_data_block *elliptic_get_shared_obj(uint32_t
+	object_id) {
+
 	size_t i;
 
 	for (i = 0; i < NUM_SHARED_RW_OBJS; ++i) {
@@ -222,6 +259,7 @@ struct elliptic_shared_data_block *elliptic_get_shared_obj(uint32_t object_id)
 
 	return NULL;
 }
+
 
 static const char * const ultrasound_enable_texts[] = {"Off", "On"};
 
@@ -237,7 +275,7 @@ int get_elliptic_calibration_data(uint8_t *caldata, uint32_t max_size)
 	copied = ELLIPTIC_CALIBRATION_DATA_SIZE;
 	if (max_size < ELLIPTIC_CALIBRATION_DATA_SIZE) {
 		copied = max_size;
-		EL_PRINT_D("size mismatch: %u vs %u",
+		EL_PRINT_D("size mismatch : %u vs %u",
 			(uint32_t)ELLIPTIC_CALIBRATION_DATA_SIZE, max_size);
 	}
 
@@ -253,7 +291,7 @@ int get_elliptic_calibration_v2_data(uint8_t *caldata, uint32_t max_size)
 	copied = ELLIPTIC_CALIBRATION_V2_DATA_SIZE;
 	if (max_size < ELLIPTIC_CALIBRATION_V2_DATA_SIZE) {
 		copied = max_size;
-		EL_PRINT_D("size mismatch: %u vs %u",
+		EL_PRINT_D("size mismatch : %u vs %u",
 			(uint32_t)ELLIPTIC_CALIBRATION_V2_DATA_SIZE, max_size);
 	}
 
@@ -269,7 +307,7 @@ int get_elliptic_diagnostics_data(uint8_t *diagdata, uint32_t max_size)
 	copied = ELLIPTIC_DIAGNOSTICS_DATA_SIZE;
 	if (max_size < ELLIPTIC_DIAGNOSTICS_DATA_SIZE) {
 		copied = max_size;
-		EL_PRINT_D("size mismatch: %u vs %u",
+		EL_PRINT_D("size mismatch : %u vs %u",
 			(uint32_t)ELLIPTIC_DIAGNOSTICS_DATA_SIZE, max_size);
 	}
 
@@ -277,6 +315,7 @@ int get_elliptic_diagnostics_data(uint8_t *diagdata, uint32_t max_size)
 		max_size);
 	return copied;
 }
+
 
 static uint32_t ultrasound_enable_cache;
 
@@ -595,14 +634,17 @@ int elliptic_calibration_param_get(
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.calibration_state;
 		break;
+
 	case ELLIPTIC_CALIBRATION_PROFILE:
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.calibration_profile;
 		break;
+
 	case ELLIPTIC_ULTRASOUND_GAIN:
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.ultrasound_gain;
 		break;
+
 	default:
 		return -EINVAL;
 	}
@@ -630,6 +672,7 @@ int elliptic_calibration_param_put(
 		param.calibration_state =
 			elliptic_system_configuration_cache.calibration_state;
 		break;
+
 	case ELLIPTIC_CALIBRATION_PROFILE:
 		elliptic_system_configuration_cache.calibration_profile =
 			ucontrol->value.integer.value[0];
@@ -638,6 +681,7 @@ int elliptic_calibration_param_put(
 		param.calibration_profile =
 			elliptic_system_configuration_cache.calibration_profile;
 		break;
+
 	case ELLIPTIC_ULTRASOUND_GAIN:
 		elliptic_system_configuration_cache.ultrasound_gain =
 			ucontrol->value.integer.value[0];
@@ -645,12 +689,13 @@ int elliptic_calibration_param_put(
 		param.ultrasound_gain =
 			elliptic_system_configuration_cache.ultrasound_gain;
 		break;
+
 	default:
 		return -EINVAL;
 	}
 
 	return elliptic_data_write(ELLIPTIC_ULTRASOUND_SET_PARAMS,
-			  (u8 *)&param, sizeof(param));
+				  (u8 *)&param, sizeof(param));
 }
 
 int elliptic_system_configuration_param_get(
@@ -678,28 +723,34 @@ int elliptic_system_configuration_param_get(
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.latency;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_SENSITIVITY:
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.sensitivity;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_SPEAKER_SCALING:
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.speaker_scaling[0];
 		ucontrol->value.integer.value[1] =
 			elliptic_system_configuration_cache.speaker_scaling[1];
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_MICROPHONE_INDEX:
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.microphone_index;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE:
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.operation_mode;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE_FLAGS:
 		ucontrol->value.integer.value[0] =
 		elliptic_system_configuration_cache.operation_mode_flags;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_LOG_LEVEL:
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.log_level;
@@ -743,6 +794,7 @@ int elliptic_system_configuration_param_get(
 		ucontrol->value.integer.value[0] =
 			elliptic_system_configuration_cache.re_send;
 		break;
+
 	default:
 		EL_PRINT_E("Invalid mixer control");
 		return -EINVAL;
@@ -750,6 +802,8 @@ int elliptic_system_configuration_param_get(
 
 	return 1;
 }
+
+
 
 int elliptic_system_configuration_param_put(
 	struct snd_kcontrol *kcontrol,
@@ -782,6 +836,7 @@ int elliptic_system_configuration_param_put(
 				  (const char *)&param, sizeof(param));
 	}
 
+
 	switch (mc->shift) {
 	case ELLIPTIC_SYSTEM_CONFIGURATION_LATENCY:
 		elliptic_system_configuration_cache.latency =
@@ -789,6 +844,7 @@ int elliptic_system_configuration_param_put(
 		param.type = ESCPT_LATENCY;
 		param.latency = elliptic_system_configuration_cache.latency;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_SENSITIVITY:
 		elliptic_system_configuration_cache.sensitivity =
 			ucontrol->value.integer.value[0];
@@ -796,6 +852,7 @@ int elliptic_system_configuration_param_put(
 		param.sensitivity =
 			elliptic_system_configuration_cache.sensitivity;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_SPEAKER_SCALING:
 		elliptic_system_configuration_cache.speaker_scaling[0] =
 			ucontrol->value.integer.value[0];
@@ -807,6 +864,7 @@ int elliptic_system_configuration_param_put(
 		param.speaker_scaling[1] =
 			elliptic_system_configuration_cache.speaker_scaling[1];
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_MICROPHONE_INDEX:
 		elliptic_system_configuration_cache.microphone_index =
 			ucontrol->value.integer.value[0];
@@ -814,6 +872,7 @@ int elliptic_system_configuration_param_put(
 		param.microphone_index =
 			elliptic_system_configuration_cache.microphone_index;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE:
 		elliptic_system_configuration_cache.operation_mode =
 			ucontrol->value.integer.value[0];
@@ -821,6 +880,7 @@ int elliptic_system_configuration_param_put(
 		param.operation_mode =
 			elliptic_system_configuration_cache.operation_mode;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE_FLAGS:
 		elliptic_system_configuration_cache.operation_mode_flags =
 			ucontrol->value.integer.value[0];
@@ -828,6 +888,7 @@ int elliptic_system_configuration_param_put(
 		param.operation_mode_flags =
 		elliptic_system_configuration_cache.operation_mode_flags;
 		break;
+
 	case ELLIPTIC_SYSTEM_CONFIGURATION_LOG_LEVEL:
 		elliptic_system_configuration_cache.log_level =
 			ucontrol->value.integer.value[0];
@@ -907,324 +968,338 @@ int elliptic_system_configuration_param_put(
 		param.re_send =
 			elliptic_system_configuration_cache.re_send;
 		break;
+
 	default:
 		return -EINVAL;
 	}
 
 	return elliptic_data_write(ELLIPTIC_ULTRASOUND_SET_PARAMS,
-			  (const char *)&param, sizeof(param));
+				  (const char *)&param, sizeof(param));
 }
+
 
 static const struct snd_kcontrol_new ultrasound_filter_mixer_controls[] = {
 	SOC_ENUM_EXT("Ultrasound Enable",
-		elliptic_enum[0],
-		elliptic_ultrasound_enable_get,
-		elliptic_ultrasound_enable_set),
+	elliptic_enum[0],
+	elliptic_ultrasound_enable_get,
+	elliptic_ultrasound_enable_set),
 	SOC_ENUM_EXT("Ultrasound RampDown",
-		elliptic_enum[0],
-		elliptic_ultrasound_rampdown_get,
-		elliptic_ultrasound_rampdown_set),
+	elliptic_enum[0],
+	elliptic_ultrasound_rampdown_get,
+	elliptic_ultrasound_rampdown_set),
 	SOC_SINGLE_EXT("Ultrasound Latency",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_LATENCY,
-		10000,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_LATENCY,
+	10000,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Sensitivity",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_SENSITIVITY,
-		1000000,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_SENSITIVITY,
+	1000000,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_DOUBLE_EXT("Ultrasound Speaker Scaling",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_SPEAKER_SCALING,
-		0,
-		1000000,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_SPEAKER_SCALING,
+	0,
+	1000000,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Microphone Index",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_MICROPHONE_INDEX,
-		20,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_MICROPHONE_INDEX,
+	20,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Mode",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE,
-		255,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE,
+	255,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Mode Flags",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE_FLAGS,
-		256,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_OPERATION_MODE_FLAGS,
+	256,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Calibration Profile",
-		ELLIPTIC_CALIBRATION,
-		ELLIPTIC_CALIBRATION_PROFILE,
-		256,
-		0,
-		elliptic_calibration_param_get,
-		elliptic_calibration_param_put),
+	ELLIPTIC_CALIBRATION,
+	ELLIPTIC_CALIBRATION_PROFILE,
+	256,
+	0,
+	elliptic_calibration_param_get,
+	elliptic_calibration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Gain",
-		ELLIPTIC_CALIBRATION,
-		ELLIPTIC_ULTRASOUND_GAIN,
-		256,
-		0,
-		elliptic_calibration_param_get,
-		elliptic_calibration_param_put),
+	ELLIPTIC_CALIBRATION,
+	ELLIPTIC_ULTRASOUND_GAIN,
+	256,
+	0,
+	elliptic_calibration_param_get,
+	elliptic_calibration_param_put),
+
 	SOC_SINGLE_EXT("Ultrasound Calibration State",
-		ELLIPTIC_CALIBRATION,
-		ELLIPTIC_CALIBRATION_STATE,
-		256,
-		0,
-		elliptic_calibration_param_get,
-		elliptic_calibration_param_put),
+	ELLIPTIC_CALIBRATION,
+	ELLIPTIC_CALIBRATION_STATE,
+	256,
+	0,
+	elliptic_calibration_param_get,
+	elliptic_calibration_param_put),
+
 	SND_SOC_BYTES_EXT("Ultrasound System Configuration",
-		ELLIPTIC_SYSTEM_CONFIGURATION_SIZE,
-		elliptic_system_configuration_get,
-		elliptic_system_configuration_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION_SIZE,
+	elliptic_system_configuration_get,
+	elliptic_system_configuration_put),
 	SND_SOC_BYTES_EXT("Ultrasound Calibration Data",
-		ELLIPTIC_CALIBRATION_DATA_SIZE,
-		elliptic_calibration_data_get,
-		elliptic_calibration_data_put),
+	ELLIPTIC_CALIBRATION_DATA_SIZE,
+	elliptic_calibration_data_get,
+	elliptic_calibration_data_put),
 	SND_SOC_BYTES_EXT("Ultrasound Version",
-		ELLIPTIC_VERSION_INFO_SIZE,
-		elliptic_version_data_get,
-		elliptic_version_data_put),
+	ELLIPTIC_VERSION_INFO_SIZE,
+	elliptic_version_data_get,
+	elliptic_version_data_put),
 	SND_SOC_BYTES_EXT("Ultrasound Branch",
-		ELLIPTIC_BRANCH_INFO_MAX_SIZE,
-		elliptic_branch_data_get,
-		elliptic_branch_data_put),
+	ELLIPTIC_BRANCH_INFO_MAX_SIZE,
+	elliptic_branch_data_get,
+	elliptic_branch_data_put),
 	SND_SOC_BYTES_EXT("Ultrasound Tag",
-		ELLIPTIC_TAG_INFO_SIZE,
-		elliptic_tag_data_get,
-		elliptic_tag_data_put),
+	ELLIPTIC_TAG_INFO_SIZE,
+	elliptic_tag_data_get,
+	elliptic_tag_data_put),
 	SOC_SINGLE_EXT("Ultrasound Log Level",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_LOG_LEVEL,
-		7,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_LOG_LEVEL,
+	7,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
+
 	SND_SOC_BYTES_EXT("Ultrasound Calibration Ext Data",
-		ELLIPTIC_CALIBRATION_V2_DATA_SIZE,
-		elliptic_calibration_v2_data_get,
-		elliptic_calibration_v2_data_put),
+	ELLIPTIC_CALIBRATION_V2_DATA_SIZE,
+	elliptic_calibration_v2_data_get,
+	elliptic_calibration_v2_data_put),
+
 	SND_SOC_BYTES_EXT("Ultrasound Diagnostics Data",
-		ELLIPTIC_DIAGNOSTICS_DATA_SIZE,
-		elliptic_diagnostics_data_get,
-		elliptic_diagnostics_data_put),
+	ELLIPTIC_DIAGNOSTICS_DATA_SIZE,
+	elliptic_diagnostics_data_get,
+	elliptic_diagnostics_data_put),
+
 	SOC_ENUM_EXT("Ultrasound Diagnostics Request",
-		elliptic_enum[0],
-		elliptic_ultrasound_diagnostics_get,
-		elliptic_ultrasound_request_diagnostics),
+	elliptic_enum[0],
+	elliptic_ultrasound_diagnostics_get,
+	elliptic_ultrasound_request_diagnostics),
+
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 0",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_0,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_0,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 1",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_1,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_1,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 2",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_2,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_2,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 3",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_3,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_3,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 4",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_4,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_4,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 5",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_5,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_5,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 6",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_6,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_6,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 7",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_7,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_7,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 8",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_8,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_8,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 9",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_9,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_9,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 10",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_10,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_10,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 11",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_11,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_11,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 12",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_12,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_12,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 13",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_13,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_13,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 14",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_14,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_14,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Custom Setting 15",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_15,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_15,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_ENUM_EXT("Ultrasound Tx Port",
-		elliptic_enum[0],
-		elliptic_ultrasound_tx_port_get,
-		elliptic_ultrasound_tx_port_set),
+	elliptic_enum[0],
+	elliptic_ultrasound_tx_port_get,
+	elliptic_ultrasound_tx_port_set),
 	SOC_ENUM_EXT("Ultrasound Rx Port",
-		elliptic_enum[0],
-		elliptic_ultrasound_rx_port_get,
-		elliptic_ultrasound_rx_port_set),
+	elliptic_enum[0],
+	elliptic_ultrasound_rx_port_get,
+	elliptic_ultrasound_rx_port_set),
 	SOC_SINGLE_EXT("Ultrasound Suspend",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_SUSPEND,
-		1,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_SUSPEND,
+	1,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Input",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_INPUT_ENABLED,
-		1,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_INPUT_ENABLED,
+	1,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Output",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_OUTPUT_ENABLED,
-		1,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_OUTPUT_ENABLED,
+	1,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Event",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_EXTERNAL_EVENT,
-		256,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_EXTERNAL_EVENT,
+	256,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Calibration Method",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CALIBRATION_METHOD,
-		256,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CALIBRATION_METHOD,
+	256,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
+
 	SND_SOC_BYTES_EXT("Ultrasound ML",
-		ELLIPTIC_ML_DATA_SIZE,
-		elliptic_ml_data_get,
-		elliptic_ml_data_put),
+	ELLIPTIC_ML_DATA_SIZE,
+	elliptic_ml_data_get,
+	elliptic_ml_data_put),
+
 	SOC_SINGLE_EXT("Ultrasound Debug Mode",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_DEBUG_MODE,
-		256,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_DEBUG_MODE,
+	256,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SOC_SINGLE_EXT("Ultrasound Context",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CONTEXT,
-		ELLIPTIC_SYSTEM_CONFIGURATION_MAX_CONTEXT_VALUE,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CONTEXT,
+	ELLIPTIC_SYSTEM_CONFIGURATION_MAX_CONTEXT_VALUE,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
 	SND_SOC_BYTES_EXT("Ultrasound Sensor Data",
-		ELLIPTIC_SENSOR_DATA_SIZE,
-		elliptic_sensor_data_get,
-		elliptic_sensor_data_put),
+	ELLIPTIC_SENSOR_DATA_SIZE,
+	elliptic_sensor_data_get,
+	elliptic_sensor_data_put),
+
 	SOC_SINGLE_EXT("Ultrasound Capture",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_CAPTURE,
-		256,
-		-1,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_CAPTURE,
+	256,
+	-1,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
+
 	SOC_SINGLE_EXT("Ultrasound Tx Channels",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_INPUT_CHANNELS,
-		16,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_INPUT_CHANNELS,
+	16,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
+
 	SOC_SINGLE_EXT("Ultrasound RE SEND",
-		ELLIPTIC_SYSTEM_CONFIGURATION,
-		ELLIPTIC_SYSTEM_CONFIGURATION_RE_SEND,
-		1,
-		0,
-		elliptic_system_configuration_param_get,
-		elliptic_system_configuration_param_put),
+	ELLIPTIC_SYSTEM_CONFIGURATION,
+	ELLIPTIC_SYSTEM_CONFIGURATION_RE_SEND,
+	1,
+	0,
+	elliptic_system_configuration_param_get,
+	elliptic_system_configuration_param_put),
+
 };
 
 unsigned int elliptic_add_component_controls(void *component)

@@ -5,9 +5,9 @@
  *
  * Author: Barry <zhaozhongbo@awinic.com>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation;  either version 2 of the License, or (at your
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
  * option) any later version.
  *
  */
@@ -83,7 +83,7 @@ static int aw_dev_get_chipid(struct aw_device *aw_dev);
 int aw_dev_i2c_write_byte(struct aw_device *aw_dev,
 			uint8_t reg_addr, uint8_t reg_data)
 {
-	int ret = 0;
+	int ret = -1;
 	unsigned char cnt = 0;
 
 	while (cnt < AW_I2C_RETRIES) {
@@ -104,7 +104,7 @@ int aw_dev_i2c_write_byte(struct aw_device *aw_dev,
 int aw_dev_i2c_read_byte(struct aw_device *aw_dev,
 			uint8_t reg_addr, uint8_t *reg_data)
 {
-	int ret = 0;
+	int ret = -1;
 	unsigned char cnt = 0;
 
 	while (cnt < AW_I2C_RETRIES) {
@@ -124,9 +124,10 @@ int aw_dev_i2c_read_byte(struct aw_device *aw_dev,
 }
 
 int aw_dev_i2c_read_msg(struct aw_device *aw_dev,
-			uint8_t reg_addr, uint8_t *data_buf, uint32_t data_len)
+	uint8_t reg_addr, uint8_t *data_buf, uint32_t data_len)
 {
-	int ret = 0;
+	int ret = -1;
+
 	struct i2c_msg msg[] = {
 	[0] = {
 		.addr = aw_dev->i2c_addr,
@@ -155,9 +156,9 @@ int aw_dev_i2c_read_msg(struct aw_device *aw_dev,
 }
 
 int aw_dev_i2c_write_bits(struct aw_device *aw_dev,
-			uint8_t reg_addr, uint8_t mask, uint8_t reg_data)
+	uint8_t reg_addr, uint8_t mask, uint8_t reg_data)
 {
-	int ret = 0;
+	int ret = -1;
 	unsigned char reg_val = 0;
 
 	ret = aw_dev_i2c_read_byte(aw_dev, reg_addr, &reg_val);
@@ -165,7 +166,6 @@ int aw_dev_i2c_write_bits(struct aw_device *aw_dev,
 		AW_DEV_LOGE(aw_dev->dev, "i2c read error, ret=%d", ret);
 		return ret;
 	}
-
 	reg_val &= mask;
 	reg_val |= reg_data;
 	ret = aw_dev_i2c_write_byte(aw_dev, reg_addr, reg_val);
@@ -186,7 +186,7 @@ static int aw_dev_reg_update(struct aw_device *aw_dev,
 			struct aw_data_container *profile_data)
 {
 	int i = 0;
-	int ret = 0;
+	int ret = -1;
 
 	if (profile_data == NULL)
 		return -EINVAL;
@@ -197,7 +197,7 @@ static int aw_dev_reg_update(struct aw_device *aw_dev,
 	}
 
 	for (i = 0; i < profile_data->len; i = i + 2) {
-		AW_DEV_LOGD(aw_dev->dev, "reg=0x%02x, val=0x%02x",
+		AW_DEV_LOGI(aw_dev->dev, "reg=0x%02x, val = 0x%02x",
 			profile_data->data[i], profile_data->data[i + 1]);
 
 		ret = aw_dev_i2c_write_byte(aw_dev, profile_data->data[i],
@@ -210,7 +210,7 @@ static int aw_dev_reg_update(struct aw_device *aw_dev,
 }
 
 static void aw_dev_reg_mute_bits_set(struct aw_device *aw_dev,
-			uint8_t *reg_val, bool enable)
+				uint8_t *reg_val, bool enable)
 {
 	if (enable) {
 		*reg_val &= aw_dev->mute_desc.mask;
@@ -237,10 +237,9 @@ static bool aw_dev_gpio_is_valid(struct aw_device *aw_dev)
 void aw_dev_hw_pwr_ctrl(struct aw_device *aw_dev, bool enable)
 {
 	if (aw_dev->hwen_status == AW_DEV_HWEN_INVALID) {
-		AW_DEV_LOGD(aw_dev->dev, "product not have reset-pin, hardware pwd control invalid");
+		AW_DEV_LOGD(aw_dev->dev, "product not have reset-pin,hardware pwd control invalid");
 		return;
 	}
-
 	if (enable) {
 		if (aw_dev_gpio_is_valid(aw_dev)) {
 			gpio_set_value_cansleep(aw_dev->rst_gpio, AW_GPIO_LOW_LEVEL);
@@ -248,18 +247,18 @@ void aw_dev_hw_pwr_ctrl(struct aw_device *aw_dev, bool enable)
 			gpio_set_value_cansleep(aw_dev->rst_gpio, AW_GPIO_HIGHT_LEVEL);
 			mdelay(2);
 			aw_dev->hwen_status = AW_DEV_HWEN_ON;
-			AW_DEV_LOGD(aw_dev->dev, "hw power on");
+			AW_DEV_LOGI(aw_dev->dev, "hw power on");
 		} else {
-			AW_DEV_LOGD(aw_dev->dev, "hw already power on");
+			AW_DEV_LOGI(aw_dev->dev, "hw already power on");
 		}
 	} else {
 		if (aw_dev_gpio_is_valid(aw_dev)) {
 			gpio_set_value_cansleep(aw_dev->rst_gpio, AW_GPIO_LOW_LEVEL);
 			mdelay(2);
 			aw_dev->hwen_status = AW_DEV_HWEN_OFF;
-			AW_DEV_LOGD(aw_dev->dev, "hw power off");
+			AW_DEV_LOGI(aw_dev->dev, "hw power off");
 		} else {
-			AW_DEV_LOGD(aw_dev->dev, "hw already power off");
+			AW_DEV_LOGI(aw_dev->dev, "hw already power off");
 		}
 	}
 }
@@ -273,13 +272,13 @@ int aw_dev_mute_ctrl(struct aw_device *aw_dev, bool enable)
 				aw_dev->mute_desc.mask, aw_dev->mute_desc.enable);
 		if (ret < 0)
 			return ret;
-		AW_DEV_LOGD(aw_dev->dev, "set mute down");
+		AW_DEV_LOGI(aw_dev->dev, "set mute down");
 	} else {
 		ret = aw_dev_i2c_write_bits(aw_dev, aw_dev->mute_desc.addr,
 				aw_dev->mute_desc.mask, aw_dev->mute_desc.disable);
 		if (ret < 0)
 			return ret;
-		AW_DEV_LOGD(aw_dev->dev, "close mute down");
+		AW_DEV_LOGI(aw_dev->dev, "close mute down");
 	}
 
 	return 0;
@@ -288,13 +287,13 @@ int aw_dev_mute_ctrl(struct aw_device *aw_dev, bool enable)
 void aw_dev_soft_reset(struct aw_device *aw_dev)
 {
 	int i = 0;
-	int ret = 0;
+	int ret = -1;
 	struct aw_soft_rst_desc *soft_rst = &aw_dev->soft_rst_desc;
 
 	AW_DEV_LOGD(aw_dev->dev, "enter");
 
 	if (aw_dev->hwen_status == AW_DEV_HWEN_OFF) {
-		AW_DEV_LOGE(aw_dev->dev, "hw is off, can not softrst");
+		AW_DEV_LOGE(aw_dev->dev, "hw is off,can not softrst");
 		return;
 	}
 
@@ -309,29 +308,29 @@ void aw_dev_soft_reset(struct aw_device *aw_dev)
 	}
 
 	if (soft_rst->len % 2) {
-		AW_DEV_LOGE(aw_dev->dev, "softrst data_len[%d] is odd number, data not available",
+		AW_DEV_LOGE(aw_dev->dev, "softrst data_len[%d] is odd number,data not available",
 			aw_dev->soft_rst_desc.len);
 		return;
 	}
 
 	for (i = 0; i < soft_rst->len / sizeof(uint8_t); i += 2) {
-		AW_DEV_LOGD(aw_dev->dev, "softrst_reg=0x%02x, val=0x%02x",
+		AW_DEV_LOGD(aw_dev->dev, "softrst_reg=0x%02x, val = 0x%02x",
 			soft_rst->access[i], soft_rst->access[i + 1]);
 
 		ret = aw_dev_i2c_write_byte(aw_dev, soft_rst->access[i],
 				soft_rst->access[i + 1]);
 		if (ret < 0) {
-			AW_DEV_LOGE(aw_dev->dev, "write failed, ret=%d, cnt=%d",
+			AW_DEV_LOGE(aw_dev->dev, "write failed,ret = %d,cnt=%d",
 				ret, i);
 			return;
 		}
 	}
-
 	AW_DEV_LOGD(aw_dev->dev, "down");
 }
 
+
 int aw_dev_default_pwr_off(struct aw_device *aw_dev,
-			struct aw_data_container *profile_data)
+		struct aw_data_container *profile_data)
 {
 	int ret = 0;
 
@@ -349,12 +348,15 @@ int aw_dev_default_pwr_off(struct aw_device *aw_dev,
 		}
 	}
 
+	aw_dev_hw_pwr_ctrl(aw_dev, false);
 	AW_DEV_LOGD(aw_dev->dev, "down");
+	return 0;
 
 reg_off_update_failed:
 	aw_dev_hw_pwr_ctrl(aw_dev, false);
 	return ret;
 }
+
 
 /************************************************************************
  *
@@ -391,7 +393,7 @@ int aw_dev_esd_reg_status_check(struct aw_device *aw_dev)
 	AW_DEV_LOGD(aw_dev->dev, "enter");
 
 	if (!esd_desc->first_update_reg_addr) {
-		AW_DEV_LOGE(aw_dev->dev, "esd check info if not init, please check");
+		AW_DEV_LOGE(aw_dev->dev, "esd check info if not init,please check");
 		return -EINVAL;
 	}
 
@@ -403,7 +405,7 @@ int aw_dev_esd_reg_status_check(struct aw_device *aw_dev)
 		return ret;
 	}
 
-	AW_DEV_LOGD(aw_dev->dev, "0x%02x: default val=0x%02x, real val=0x%02x",
+	AW_DEV_LOGD(aw_dev->dev, "0x%02x:default val=0x%02x real val=0x%02x",
 		esd_desc->first_update_reg_addr,
 		esd_desc->first_update_reg_val, reg_val);
 
@@ -411,7 +413,6 @@ int aw_dev_esd_reg_status_check(struct aw_device *aw_dev)
 		AW_DEV_LOGE(aw_dev->dev, "reg status check failed");
 		return -EINVAL;
 	}
-
 	return 0;
 }
 
@@ -422,7 +423,7 @@ int aw_dev_check_reg_is_rec_mode(struct aw_device *aw_dev)
 	struct aw_rec_mode_desc *rec_desc = &aw_dev->rec_desc;
 
 	if (!rec_desc->addr) {
-		AW_DEV_LOGE(aw_dev->dev, "rec check info if not init, please check");
+		AW_DEV_LOGE(aw_dev->dev, "rec check info if not init,please check");
 		return -EINVAL;
 	}
 
@@ -435,22 +436,22 @@ int aw_dev_check_reg_is_rec_mode(struct aw_device *aw_dev)
 
 	if (rec_desc->enable) {
 		if (reg_val & ~(rec_desc->mask)) {
-			AW_DEV_LOGD(aw_dev->dev, "reg status is receiver mode");
+			AW_DEV_LOGI(aw_dev->dev, "reg status is receiver mode");
 			aw_dev->is_rec_mode = AW_IS_REC_MODE;
 		} else {
 			aw_dev->is_rec_mode = AW_NOT_REC_MODE;
 		}
 	} else {
 		if (!(reg_val & ~(rec_desc->mask))) {
-			AW_DEV_LOGD(aw_dev->dev, "reg status is receiver mode");
+			AW_DEV_LOGI(aw_dev->dev, "reg status is receiver mode");
 			aw_dev->is_rec_mode = AW_IS_REC_MODE;
 		} else {
 			aw_dev->is_rec_mode = AW_NOT_REC_MODE;
 		}
 	}
-
 	return 0;
 }
+
 
 /****************************************************************************
  *
@@ -464,34 +465,33 @@ static int aw_dev_pid_9b_reg_update(struct aw_device *aw_dev,
 			struct aw_data_container *profile_data)
 {
 	int i = 0;
-	int ret = 0;
+	int ret = -1;
 	uint8_t reg_val = 0;
 
 	if (profile_data == NULL)
 		return -EINVAL;
 
 	if (aw_dev->hwen_status == AW_DEV_HWEN_OFF) {
-		AW_DEV_LOGE(aw_dev->dev, "dev is pwr_off, can not update reg");
+		AW_DEV_LOGE(aw_dev->dev, "dev is pwr_off,can not update reg");
 		return -EINVAL;
 	}
 
 	if (profile_data->len != AW_PID_9B_BIN_REG_CFG_COUNT) {
-		AW_DEV_LOGE(aw_dev->dev, "reg_config count of bin is error, can not update reg");
+		AW_DEV_LOGE(aw_dev->dev, "reg_config count of bin is error,can not update reg");
 		return -EINVAL;
 	}
-
 	ret = aw_dev_i2c_write_byte(aw_dev, AW87XXX_PID_9B_ENCRYPTION_REG,
 		AW87XXX_PID_9B_ENCRYPTION_BOOST_OUTPUT_SET);
 	if (ret < 0)
 		return ret;
 
 	for (i = 1; i < AW_PID_9B_BIN_REG_CFG_COUNT; i++) {
-		AW_DEV_LOGD(aw_dev->dev, "reg=0x%02x, val=0x%02x",
+		AW_DEV_LOGI(aw_dev->dev, "reg=0x%02x, val = 0x%02x",
 			i, profile_data->data[i]);
 		reg_val = profile_data->data[i];
 		if (i == AW87XXX_PID_9B_SYSCTRL_REG) {
 			aw_dev_reg_mute_bits_set(aw_dev, &reg_val, true);
-			AW_DEV_LOGD(aw_dev->dev, "change mute_mask, val=0x%02x",
+			AW_DEV_LOGD(aw_dev->dev, "change mute_mask, val = 0x%02x",
 				reg_val);
 		}
 
@@ -503,8 +503,7 @@ static int aw_dev_pid_9b_reg_update(struct aw_device *aw_dev,
 	return 0;
 }
 
-int aw_dev_pid_9b_pwr_on(struct aw_device *aw_dev,
-			struct aw_data_container *data)
+int aw_dev_pid_9b_pwr_on(struct aw_device *aw_dev, struct aw_data_container *data)
 {
 	int ret = 0;
 
@@ -575,12 +574,12 @@ static int aw_dev_pid_9a_init(struct aw_device *aw_dev)
 
 	ret = aw_dev_get_chipid(aw_dev);
 	if (ret < 0) {
-		AW_DEV_LOGE(aw_dev->dev, "read chipid is failed, ret=%d", ret);
+		AW_DEV_LOGE(aw_dev->dev, "read chipid is failed,ret=%d", ret);
 		return ret;
 	}
 
 	if (aw_dev->chipid == AW_DEV_CHIPID_9B) {
-		AW_DEV_LOGD(aw_dev->dev, "product is pid_9B class");
+		AW_DEV_LOGI(aw_dev->dev, "product is pid_9B class");
 		aw_dev_pid_9b_init(aw_dev);
 	} else {
 		AW_DEV_LOGE(aw_dev->dev, "product is not pid_9B class，not support");
@@ -620,6 +619,7 @@ static void aw_dev_chipid_39_init(struct aw_device *aw_dev)
 	aw_dev->esd_desc.first_update_reg_val = AW87XXX_PID_39_MODECTRL_DEFAULT;
 }
 /********************* aw87xxx_pid_39 attributes end *************************/
+
 
 /********************* aw87xxx_pid_59_5x9 attributes *************************/
 static void aw_dev_chipid_59_5x9_init(struct aw_device *aw_dev)
@@ -738,7 +738,7 @@ static void aw_dev_chipid_76_init(struct aw_device *aw_dev)
 
 static void aw_dev_chip_init(struct aw_device *aw_dev)
 {
-	int ret = 0;
+	int ret  = 0;
 
 	/*get info by chipid*/
 	switch (aw_dev->chipid) {
@@ -749,28 +749,28 @@ static void aw_dev_chip_init(struct aw_device *aw_dev)
 		break;
 	case AW_DEV_CHIPID_9B:
 		aw_dev_pid_9b_init(aw_dev);
-		AW_DEV_LOGD(aw_dev->dev, "product is pid_9B class");
+		AW_DEV_LOGI(aw_dev->dev, "product is pid_9B class");
 		break;
 	case AW_DEV_CHIPID_39:
 		aw_dev_chipid_39_init(aw_dev);
-		AW_DEV_LOGD(aw_dev->dev, "product is pid_39 class");
+		AW_DEV_LOGI(aw_dev->dev, "product is pid_39 class");
 		break;
 	case AW_DEV_CHIPID_59:
 		if (aw_dev_gpio_is_valid(aw_dev)) {
 			aw_dev_chipid_59_5x9_init(aw_dev);
-			AW_DEV_LOGD(aw_dev->dev, "product is pid_59_5x9 class");
+			AW_DEV_LOGI(aw_dev->dev, "product is pid_59_5x9 class");
 		} else {
 			aw_dev_chipid_59_3x9_init(aw_dev);
-			AW_DEV_LOGD(aw_dev->dev, "product is pid_59_3x9 class");
+			AW_DEV_LOGI(aw_dev->dev, "product is pid_59_3x9 class");
 		}
 		break;
 	case AW_DEV_CHIPID_5A:
 		aw_dev_chipid_5a_init(aw_dev);
-		AW_DEV_LOGD(aw_dev->dev, "product is pid_5A class");
+		AW_DEV_LOGI(aw_dev->dev, "product is pid_5A class");
 		break;
 	case AW_DEV_CHIPID_76:
 		aw_dev_chipid_76_init(aw_dev);
-		AW_DEV_LOGD(aw_dev->dev, "product is pid_76 class");
+		AW_DEV_LOGI(aw_dev->dev, "product is pid_76 class");
 		break;
 	default:
 		AW_DEV_LOGE(aw_dev->dev, "unsupported device revision [0x%x]",
@@ -781,7 +781,7 @@ static void aw_dev_chip_init(struct aw_device *aw_dev)
 
 static int aw_dev_get_chipid(struct aw_device *aw_dev)
 {
-	int ret = 0;
+	int ret = -1;
 	unsigned int cnt = 0;
 	unsigned char reg_val = 0;
 
@@ -795,12 +795,13 @@ static int aw_dev_get_chipid(struct aw_device *aw_dev)
 		break;
 	}
 
+
 	if (cnt == AW_READ_CHIPID_RETRIES) {
-		AW_DEV_LOGE(aw_dev->dev, "read chip is failed, cnt=%d", cnt);
+		AW_DEV_LOGE(aw_dev->dev, "read chip is failed,cnt=%d", cnt);
 		return -EINVAL;
 	}
 
-	AW_DEV_LOGD(aw_dev->dev, "read chipid[0x%x] succeed", reg_val);
+	AW_DEV_LOGI(aw_dev->dev, "read chipid[0x%x] succeed", reg_val);
 	aw_dev->chipid = reg_val;
 
 	return 0;
@@ -808,11 +809,11 @@ static int aw_dev_get_chipid(struct aw_device *aw_dev)
 
 int aw_dev_init(struct aw_device *aw_dev)
 {
-	int ret = 0;
+	int ret = -1;
 
 	ret = aw_dev_get_chipid(aw_dev);
 	if (ret < 0) {
-		AW_DEV_LOGE(aw_dev->dev, "read chipid is failed, ret=%d", ret);
+		AW_DEV_LOGE(aw_dev->dev, "read chipid is failed,ret=%d", ret);
 		return ret;
 	}
 
@@ -820,3 +821,5 @@ int aw_dev_init(struct aw_device *aw_dev)
 
 	return 0;
 }
+
+

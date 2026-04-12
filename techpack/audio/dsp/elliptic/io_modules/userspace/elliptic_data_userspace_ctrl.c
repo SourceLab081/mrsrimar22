@@ -5,28 +5,48 @@
 
 #include <linux/module.h>
 #include <linux/kernel.h>
-#include <linux/version.h>
 #include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/debugfs.h>
-#include <linux/cdev.h>
-#include <linux/semaphore.h>
-#include <linux/uaccess.h>
 #include <linux/slab.h>
 #include <linux/mm.h>
+
+
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/version.h>
+/*  includes the file structure, that is, file open read close */
+#include <linux/fs.h>
+
+/* include the character device, makes cdev avilable */
+#include <linux/cdev.h>
+#include <linux/semaphore.h>
+
+/* includes copy_user vice versa */
+#include <linux/uaccess.h>
+
+#include <linux/slab.h>
 #include <linux/stat.h>
+#include <linux/init.h>
 #include <linux/platform_device.h>
 #include <linux/types.h>
 #include <linux/kdev_t.h>
 #include <linux/device.h>
+
+
+#include <linux/kernel.h>
+#include <linux/version.h>
+#include <linux/types.h>
 #include <linux/sched.h>
 #include <linux/wait.h>
 #include <linux/mutex.h>
 #include <asm/atomic.h>
+#include <asm/uaccess.h>
 #include <linux/errno.h>
 
 #include <elliptic/elliptic_data_io.h>
 #include <elliptic/elliptic_device.h>
+
 
 static dev_t elliptic_userspace_ctrl_major;
 #define USERSPACE_CTRL_IO_DEVICE_NAME "elliptic_us_ctrl_io"
@@ -41,10 +61,12 @@ struct elliptic_userspace_ctrl_device {
 	atomic_t data_state;
 };
 
+
+
 static struct elliptic_userspace_ctrl_device ctrl_device;
 
 static uint8_t *get_ping_buffer(struct elliptic_userspace_ctrl_device *dev,
-	size_t *data_size)
+	/*out parameter*/ size_t *data_size)
 {
 	if (data_size != NULL)
 		*data_size = dev->ping_pong_buffer_size[dev->ping_pong_idx];
@@ -53,13 +75,14 @@ static uint8_t *get_ping_buffer(struct elliptic_userspace_ctrl_device *dev,
 }
 
 static uint8_t *get_pong_buffer(struct elliptic_userspace_ctrl_device *dev,
-	size_t *data_size)
+/*out parameter*/ size_t *data_size)
 {
 	if (data_size != NULL)
 		*data_size = dev->ping_pong_buffer_size[1 - dev->ping_pong_idx];
 
 	return dev->ping_pong_buffer[1 - dev->ping_pong_idx];
 }
+
 
 static void set_pong_buffer_size(struct elliptic_userspace_ctrl_device *dev,
 	size_t data_size)
@@ -75,13 +98,12 @@ static void swap_ping_pong(struct elliptic_userspace_ctrl_device *dev)
 static int device_open(struct inode *inode, struct file *filp)
 {
 	if (inode->i_cdev != &ctrl_device.cdev) {
-		pr_err("elliptic %s: dev pointer mismatch\n", __func__);
+		pr_warn("elliptic : dev pointer mismatch\n");
 		return -ENODEV; /* No such device */
 	}
 
 	if (down_interruptible(&ctrl_device.sem) != 0)
 		return -EEXIST;
-
 	EL_PRINT_I("Opened device %s", USERSPACE_CTRL_IO_DEVICE_NAME);
 	return 0;
 }
@@ -94,11 +116,9 @@ static ssize_t device_read(struct file *fp, char __user *buff,
 	uint8_t *ping_buffer;
 	int result;
 
-	if (user_buf_length < ELLIPTIC_MSG_BUF_SIZE) {
-		EL_PRINT_E("user space buffer user_buf_length too small: %zu",
-			user_buf_length);
-		return -EINVAL;
-	}
+	if (user_buf_length < ELLIPTIC_MSG_BUF_SIZE)
+		EL_PRINT_E("user space buffer user_buf_length too small : %zu",
+		user_buf_length);
 
 	bytes_read = 0;
 	copy_result = 0;
@@ -163,11 +183,12 @@ static int device_close(struct inode *inode, struct file *filp)
 	return 0;
 }
 
-static const struct file_operations elliptic_userspace_ctrl_fops = {
-	.owner		= THIS_MODULE,
-	.open		= device_open,
-	.read		= device_read,
-	.release	= device_close,
+static const struct file_operations
+elliptic_userspace_ctrl_fops = {
+	.owner      = THIS_MODULE,
+	.open       = device_open,
+	.read       = device_read,
+	.release    = device_close,
 };
 
 int elliptic_userspace_ctrl_driver_init(void)
@@ -185,12 +206,19 @@ int elliptic_userspace_ctrl_driver_init(void)
 	}
 
 	elliptic_userspace_ctrl_major = MAJOR(device_number);
-	device_number = MKDEV(elliptic_userspace_ctrl_major, 0);
 
-	sema_init(&ctrl_device.sem, 1);
-	mutex_init(&ctrl_device.data_lock);
-	init_waitqueue_head(&ctrl_device.data_available);
-	atomic_set(&ctrl_device.data_state, 0);
+	device_number = MKDEV(elliptic_userspace_ctrl_major, 0);
+	device = device_create(
+		elliptic_class, NULL, device_number,
+		NULL, USERSPACE_CTRL_IO_DEVICE_NAME);
+
+	if (IS_ERR(device)) {
+		unregister_chrdev(
+			elliptic_userspace_ctrl_major,
+			USERSPACE_CTRL_IO_DEVICE_NAME);
+		EL_PRINT_E("Failed to create the device\n");
+		return PTR_ERR(device);
+	}
 
 	cdev_init(&ctrl_device.cdev, &elliptic_userspace_ctrl_fops);
 	ctrl_device.cdev.owner = THIS_MODULE;
@@ -198,23 +226,12 @@ int elliptic_userspace_ctrl_driver_init(void)
 	if (err) {
 		EL_PRINT_W("error %d while trying to add %s%d",
 			err, ELLIPTIC_DEVICENAME, 0);
-		mutex_destroy(&ctrl_device.data_lock);
-		unregister_chrdev_region(device_number, 1);
 		return err;
 	}
 
-	device = device_create(
-		elliptic_class, NULL, device_number,
-		NULL, USERSPACE_CTRL_IO_DEVICE_NAME);
-
-	if (IS_ERR(device)) {
-		mutex_destroy(&ctrl_device.data_lock);
-		cdev_del(&ctrl_device.cdev);
-		unregister_chrdev_region(device_number, 1);
-		EL_PRINT_E("Failed to create the device\n");
-		return PTR_ERR(device);
-	}
-
+	sema_init(&ctrl_device.sem, 1);
+	mutex_init(&ctrl_device.data_lock);
+	init_waitqueue_head(&ctrl_device.data_available);
 	return 0;
 }
 
@@ -225,9 +242,7 @@ void elliptic_userspace_ctrl_driver_exit(void)
 	cdev_del(&ctrl_device.cdev);
 	unregister_chrdev(elliptic_userspace_ctrl_major,
 		USERSPACE_CTRL_IO_DEVICE_NAME);
-	if (down_trylock(&ctrl_device.sem) != 0)
-		up(&ctrl_device.sem);
-	mutex_destroy(&ctrl_device.data_lock);
+	up(&ctrl_device.sem);
 }
 
 int32_t elliptic_userspace_ctrl_write(uint32_t message_id,
@@ -235,7 +250,7 @@ int32_t elliptic_userspace_ctrl_write(uint32_t message_id,
 	uint8_t *pong_buffer;
 
 	if (data_size > ELLIPTIC_MSG_BUF_SIZE) {
-		EL_PRINT_E("data size: %zu larger than buf size : %zu",
+		EL_PRINT_E("data size : %zu larger than buf size : %zu",
 			data_size, (size_t)ELLIPTIC_MSG_BUF_SIZE);
 
 		return -EINVAL;
@@ -246,9 +261,11 @@ int32_t elliptic_userspace_ctrl_write(uint32_t message_id,
 	set_pong_buffer_size(&ctrl_device, data_size);
 
 	memcpy(pong_buffer, data, data_size);
-	atomic_set(&ctrl_device.data_state, 1);
 	wake_up_interruptible(&ctrl_device.data_available);
+	atomic_set(&ctrl_device.data_state, 1);
 	mutex_unlock(&ctrl_device.data_lock);
 
 	return 0;
 }
+
+

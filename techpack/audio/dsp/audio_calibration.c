@@ -148,7 +148,7 @@ int audio_cal_register(int num_cal_types,
 			GFP_KERNEL);
 		if (callback_node == NULL) {
 			ret = -ENOMEM;
-			goto err_callback_node;
+			goto err;
 		}
 
 		memcpy(callback_node, &reg_data[i].callbacks,
@@ -162,8 +162,6 @@ int audio_cal_register(int num_cal_types,
 	}
 done:
 	return ret;
-err_callback_node:
-	kfree(client_info_node);
 err:
 	audio_cal_deregister(num_cal_types, reg_data);
 	return ret;

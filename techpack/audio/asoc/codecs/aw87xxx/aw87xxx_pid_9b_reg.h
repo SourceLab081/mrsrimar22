@@ -42,6 +42,7 @@ const unsigned char aw87xxx_pid_9b_reg_access[AW87XXX_PID_9B_REG_MAX] = {
 	[AW87XXX_PID_9B_AGC1_REG]	= (REG_RD_ACCESS | REG_WR_ACCESS),
 };
 
+
 #define AW87XXX_PID_9B_ENCRYPTION_REG		(0x64)
 #define AW87XXX_PID_9B_ENCRYPTION_BOOST_OUTPUT_SET	(0x2C)
 

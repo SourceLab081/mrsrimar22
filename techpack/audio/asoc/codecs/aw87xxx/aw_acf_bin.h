@@ -171,6 +171,7 @@ struct acf_bin_info {
 	struct aw_prof_info prof_info;
 };
 
+
 void aw_acf_profile_free(struct device *dev,
 		struct acf_bin_info *acf_info);
 int aw_acf_parse(struct device *dev, struct acf_bin_info *acf_info);
@@ -187,5 +188,6 @@ int aw_acf_check_profile_is_off(struct device *dev,
 char *aw_acf_get_prof_off_name(struct device *dev,
 			struct acf_bin_info *acf_info);
 void aw_acf_init(struct aw_device *aw_dev, struct acf_bin_info *acf_info, int index);
+
 
 #endif

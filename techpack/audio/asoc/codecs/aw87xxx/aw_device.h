@@ -124,6 +124,7 @@ struct aw_device {
 	struct aw_device_ops ops;
 };
 
+
 int aw_dev_i2c_write_byte(struct aw_device *aw_dev,
 			uint8_t reg_addr, uint8_t reg_data);
 int aw_dev_i2c_read_byte(struct aw_device *aw_dev,

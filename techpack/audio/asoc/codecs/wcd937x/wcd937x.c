@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2023,2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/module.h>
@@ -1067,6 +1067,8 @@ static int wcd937x_codec_enable_ear_pa(struct snd_soc_dapm_widget *w,
 					0x17, 0x00);
 			clear_bit(WCD_EAR_EN, &wcd937x->status_mask);
 		}
+		//case 05657117 05669963 CR-30628852 BEGAIN
+
 		usleep_range(10000, 10010);
 		/* disable EAR CnP FSM */
 		snd_soc_component_update_bits(component,
@@ -1083,6 +1085,7 @@ static int wcd937x_codec_enable_ear_pa(struct snd_soc_dapm_widget *w,
 		snd_soc_component_update_bits(component,
 					WCD937X_EAR_EAR_EN_REG,
 					0x02, 0x02);
+		//case 05657117 05669963 CR-30628852 END
 		break;
 	};
 	return ret;
@@ -1918,10 +1921,10 @@ static int wcd937x_aux_path_mode_get(struct snd_kcontrol *kcontrol,
 {
 	int aux_mode;
 	struct snd_soc_component *component =
-				snd_soc_kcontrol_component(kcontrol);
+		snd_soc_kcontrol_component(kcontrol);
 
 	aux_mode = ((snd_soc_component_read32(component,
-			WCD937X_DIGITAL_CDC_PATH_MODE) & 0x40) >> 6);
+		WCD937X_DIGITAL_CDC_PATH_MODE) & 0x40)>>6);
 
 	ucontrol->value.integer.value[0] = aux_mode;
 
@@ -1936,7 +1939,8 @@ static int wcd937x_aux_path_mode_put(struct snd_kcontrol *kcontrol,
 {
 	int aux_mode;
 	struct snd_soc_component *component =
-				snd_soc_kcontrol_component(kcontrol);
+		snd_soc_kcontrol_component(kcontrol);
+	//struct wcd937x_priv *wcd937x = snd_soc_component_get_drvdata(component);
 
 	dev_dbg(component->dev, "%s: ucontrol->value.integer.value[0] = %ld\n",
 		__func__, ucontrol->value.integer.value[0]);
@@ -1945,20 +1949,19 @@ static int wcd937x_aux_path_mode_put(struct snd_kcontrol *kcontrol,
 
 	if (aux_mode) {
 		snd_soc_component_update_bits(component,
-				WCD937X_DIGITAL_CDC_PATH_MODE,
-				0x40, 0x40);
+			WCD937X_DIGITAL_CDC_PATH_MODE,
+			0x40, 0x40);
 		snd_soc_component_update_bits(component,
-				WCD937X_AUX_AUXPA,
-				0x10, 0x10);
+			WCD937X_AUX_AUXPA,
+			0x10, 0x10);
 	} else {
 		snd_soc_component_update_bits(component,
-				WCD937X_DIGITAL_CDC_PATH_MODE,
-				0x40, 0x00);
+			WCD937X_DIGITAL_CDC_PATH_MODE,
+			0x40, 0x00);
 		snd_soc_component_update_bits(component,
-				WCD937X_AUX_AUXPA,
-				0x10, 0x00);
+			WCD937X_AUX_AUXPA,
+			0x10, 0x00);
 	}
-
 	return 0;
 }
 
@@ -2274,7 +2277,7 @@ int aw87xxx_dev_0_pa(int enable, int mode)
 
 	ret = aw87xxx_set_profile(AW_DEV_0, aw_profile[set_mode]);
 	if (ret < 0) {
-		pr_err("%s: mode: %d set failed\n", __func__, set_mode);
+		pr_err("%s: mode:%d set failed\n", __func__, set_mode);
 		return -EPERM;
 	}
 	return 0;
@@ -2290,10 +2293,14 @@ int aw87xxx_dev_1_pa(int enable, int mode)
 	else
 		set_mode = mode;
 	pr_info("%s: aw87xxx_spk_mode %d\n", __func__, set_mode);
-
+#if defined(CONFIG_TARGET_PROJECT_C3Q)
+	ret = aw87xxx_set_profile(AW_DEV_0, aw_profile[set_mode]);
+#else
 	ret = aw87xxx_set_profile(AW_DEV_1, aw_profile[set_mode]);
+#endif
+
 	if (ret < 0) {
-		pr_err("%s: mode: %d set failed\n", __func__, set_mode);
+		pr_err("%s: mode:%d set failed\n", __func__, set_mode);
 		return -EPERM;
 	}
 	return 0;
@@ -2318,7 +2325,7 @@ static int aw87xxx_dev_0_pa_event(struct snd_soc_dapm_widget *w,
 		aw87xxx_dev_0_pa(false, mode);
 		break;
 	default:
-		pr_debug("%s: Unexpected event\n", __func__);
+		pr_debug("%s: Unexpected event", __func__);
 		break;
 	}
 
@@ -2344,7 +2351,29 @@ static int aw87xxx_dev_1_pa_event(struct snd_soc_dapm_widget *w,
 		aw87xxx_dev_1_pa(false, mode);
 		break;
 	default:
-		pr_debug("%s: Unexpected event\n", __func__);
+		pr_debug("%s: Unexpected event", __func__);
+		break;
+	}
+
+	return 0;
+}
+#endif
+
+#if defined(CONFIG_SND_SOC_FS1599)
+extern void fsm_speaker_onn(void);
+extern void fsm_speaker_off(void);
+static int fs1599_dev_0_pa_event(struct snd_soc_dapm_widget *w,
+		     struct snd_kcontrol *control, int event)
+{
+	switch (event) {
+	case SND_SOC_DAPM_POST_PMU:
+		fsm_speaker_onn();
+		break;
+	case SND_SOC_DAPM_PRE_PMD:
+		fsm_speaker_off();
+		break;
+	default:
+		pr_debug("%s: Unexpected event", __func__);
 		break;
 	}
 
@@ -2504,6 +2533,13 @@ static const struct snd_soc_dapm_widget wcd937x_dapm_widgets[] = {
 				aw87xxx_dev_1_pa_event, SND_SOC_DAPM_POST_PMU |
 				SND_SOC_DAPM_PRE_PMD),
 #endif
+
+#if defined(CONFIG_SND_SOC_FS1599)
+	SND_SOC_DAPM_OUT_DRV_E("FS1599_DEV_0", SND_SOC_NOPM, 0, 0, NULL, 0,
+				fs1599_dev_0_pa_event, SND_SOC_DAPM_POST_PMU |
+				SND_SOC_DAPM_PRE_PMD),
+#endif
+
 };
 
 static const struct snd_soc_dapm_widget wcd9375_dapm_widgets[] = {
@@ -2614,9 +2650,15 @@ static const struct snd_soc_dapm_route wcd937x_audio_map[] = {
 	{"RDAC4", NULL, "RX3"},
 	{"AUX_RDAC", "Switch", "RDAC4"},
 	{"AUX PGA", NULL, "AUX_RDAC"},
-#ifdef CONFIG_SND_SOC_AW87XXX
+#if defined(CONFIG_SND_SOC_AW87XXX) || defined(CONFIG_SND_SOC_FS1599)
+#if defined(CONFIG_SND_SOC_AW87XXX)
 	{"AW87XXX_DEV_1", NULL, "AUX PGA"},
 	{"AUX", NULL, "AW87XXX_DEV_1"},
+#endif
+#if defined(CONFIG_SND_SOC_FS1599)
+	{"FS1599_DEV_0", NULL, "AUX PGA"},
+	{"AUX", NULL, "FS1599_DEV_0"},
+#endif
 #else
 	{"AUX", NULL, "AUX PGA"},
 #endif
@@ -2626,7 +2668,7 @@ static const struct snd_soc_dapm_route wcd937x_audio_map[] = {
 	{"RDAC3", NULL, "RDAC3_MUX"},
 	{"EAR_RDAC", "Switch", "RDAC3"},
 	{"EAR PGA", NULL, "EAR_RDAC"},
-#ifdef CONFIG_SND_SOC_AW87XXX
+#if defined(CONFIG_SND_SOC_AW87XXX) && defined(CONFIG_TARGET_PROJECT_K7T)
 	{"AW87XXX_DEV_0", NULL, "EAR PGA"},
 	{"EAR", NULL, "AW87XXX_DEV_0"},
 #else
@@ -3039,7 +3081,7 @@ static int wcd937x_reset(struct device *dev)
 	if (rc) {
 		dev_err(dev, "%s: wcd sleep state request fail!\n",
 				__func__);
-		return -EPROBE_DEFER;
+		return rc;
 	}
 	/* 20ms sleep required after pulling the reset gpio to LOW */
 	usleep_range(20, 30);
@@ -3048,7 +3090,7 @@ static int wcd937x_reset(struct device *dev)
 	if (rc) {
 		dev_err(dev, "%s: wcd active state request fail!\n",
 				__func__);
-		return -EPROBE_DEFER;
+		return rc;
 	}
 	/* 20ms sleep required after pulling the reset gpio to HIGH */
 	usleep_range(20, 30);
@@ -3272,11 +3314,7 @@ static int wcd937x_bind(struct device *dev)
 		goto err_bind_all;
 	}
 
-	ret = wcd937x_reset(dev);
-	if (ret == -EPROBE_DEFER) {
-		dev_err(dev, "%s: wcd reset failed!\n", __func__);
-		goto err_bind_all;
-	}
+	wcd937x_reset(dev);
 	/*
 	 * Add 5msec delay to provide sufficient time for
 	 * soundwire auto enumeration of slave devices as

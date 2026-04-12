@@ -4,6 +4,7 @@
 #include <sound/soc.h>
 #include <linux/types.h>
 
+
 #define ELLIPTIC_OBJ_ID_CALIBRATION_DATA 1
 #define ELLIPTIC_OBJ_ID_VERSION_INFO 2
 #define ELLIPTIC_OBJ_ID_BRANCH_INFO 3
@@ -13,37 +14,38 @@
 #define ELLIPTIC_OBJ_ID_ML_DATA 7
 
 #define ELLIPTIC_SYSTEM_CONFIGURATION_SIZE		96
-#define ELLIPTIC_CALIBRATION_DATA_SIZE		64
-#define ELLIPTIC_CALIBRATION_V2_DATA_SIZE		448
-#define ELLIPTIC_DIAGNOSTICS_DATA_SIZE		448
-#define ELLIPTIC_DIAGNOSTICS_U32_DATA_VALUES	(ELLIPTIC_DIAGNOSTICS_DATA_SIZE>>2)
-#define ELLIPTIC_SENSOR_DATA_SIZE		68
-#define ELLIPTIC_SENSOR_U32_DATA_VALUES	(ELLIPTIC_SENSOR_DATA_SIZE>>2)
-#define ELLIPTIC_VERSION_INFO_SIZE		16
-#define ELLIPTIC_BRANCH_INFO_SIZE		32
-#define ELLIPTIC_BRANCH_INFO_MAX_SIZE		128
-#define ELLIPTIC_TAG_INFO_SIZE		32
-#define ELLIPTIC_ML_DATA_SIZE		432
+#define ELLIPTIC_CALIBRATION_DATA_SIZE          64
+#define ELLIPTIC_CALIBRATION_V2_DATA_SIZE      448
+#define ELLIPTIC_DIAGNOSTICS_DATA_SIZE         448
+#define ELLIPTIC_DIAGNOSTICS_U32_DATA_VALUES   (ELLIPTIC_DIAGNOSTICS_DATA_SIZE>>2)
+#define ELLIPTIC_SENSOR_DATA_SIZE              68
+#define ELLIPTIC_SENSOR_U32_DATA_VALUES   (ELLIPTIC_SENSOR_DATA_SIZE>>2)
+#define ELLIPTIC_VERSION_INFO_SIZE              16
+#define ELLIPTIC_BRANCH_INFO_SIZE               32
+#define ELLIPTIC_BRANCH_INFO_MAX_SIZE          128
+#define ELLIPTIC_TAG_INFO_SIZE                  32
+#define ELLIPTIC_ML_DATA_SIZE				   432
 
-#define ELLIPTIC_ULTRASOUND_DISABLE		0
-#define ELLIPTIC_ULTRASOUND_ENABLE		1
-#define ELLIPTIC_ULTRASOUND_SET_PARAMS		2
-#define ELLIPTIC_ULTRASOUND_GET_PARAMS		3
-#define ELLIPTIC_ULTRASOUND_RAMP_DOWN		4
+#define ELLIPTIC_ULTRASOUND_DISABLE				0
+#define ELLIPTIC_ULTRASOUND_ENABLE				1
+#define ELLIPTIC_ULTRASOUND_SET_PARAMS			2
+#define ELLIPTIC_ULTRASOUND_GET_PARAMS			3
+#define ELLIPTIC_ULTRASOUND_RAMP_DOWN			4
 
 /** register */
-#define ELLIPTIC_CALIBRATION		1
+#define ELLIPTIC_CALIBRATION				1
 /** bits */
-#define ELLIPTIC_CALIBRATION_STATE		0
-#define ELLIPTIC_CALIBRATION_PROFILE	1
-#define ELLIPTIC_ULTRASOUND_GAIN		2
+#define ELLIPTIC_CALIBRATION_STATE			0
+#define ELLIPTIC_CALIBRATION_PROFILE		1
+#define ELLIPTIC_ULTRASOUND_GAIN			2
 
 /** custom settings */
 #define ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_COUNT 16
 #define ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_MAX_VALUE 0x7FFFFFFF
 
+
 /** register */
-#define ELLIPTIC_SYSTEM_CONFIGURATION		0
+#define ELLIPTIC_SYSTEM_CONFIGURATION			0
 /** bits */
 #define ELLIPTIC_SYSTEM_CONFIGURATION_LATENCY		0
 #define ELLIPTIC_SYSTEM_CONFIGURATION_SENSITIVITY	1
@@ -81,7 +83,9 @@
 #define ELLIPTIC_SYSTEM_CONFIGURATION_INPUT_CHANNELS 32
 #define ELLIPTIC_SYSTEM_CONFIGURATION_RE_SEND  33
 
+
 #define ELLIPTIC_SYSTEM_CONFIGURATION_MAX_CONTEXT_VALUE 0x7FFFFFFF
+
 
 struct elliptic_engine_version_info {
 	uint32_t major;
@@ -148,39 +152,7 @@ enum elliptic_system_configuration_parameter_type {
 	ESCPT_CONTEXT,
 	ESCPT_CAPTURE,
 	ESCPT_INPUT_CHANNELS,
-	ESCPT_RE_SEND = 255,
-};
-
-struct elliptic_system_configuration_parameter {
-	enum elliptic_system_configuration_parameter_type type;
-	union {
-		int32_t speaker_scaling[2];
-		int32_t sensitivity;
-		int32_t latency;
-		int32_t microphone_index;
-		int32_t operation_mode;
-		int32_t operation_mode_flags;
-		int32_t component_gain_change;
-		int32_t calibration_state;
-		int32_t engine_version;
-		int32_t calibration_profile;
-		int32_t ultrasound_gain;
-		int32_t log_level;
-		int32_t custom_setting;
-		int32_t engine_suspend;
-		int32_t input_enabled;
-		int32_t output_enabled;
-		int32_t external_event;
-		struct {
-			int32_t calibration_method;
-			int32_t calibration_timestamp;
-		};
-		int32_t debug_mode;
-		int32_t context;
-		int32_t capture;
-		int32_t input_channels;
-		int32_t re_send;
-	};
+	ESCPT_RE_SEND=255,
 };
 
 struct elliptic_system_configuration_parameters_cache {
@@ -195,7 +167,7 @@ struct elliptic_system_configuration_parameters_cache {
 	int32_t engine_version;
 	int32_t calibration_profile;
 	int32_t ultrasound_gain;
-	int32_t log_level;
+	int32_t	log_level;
 	int32_t custom_settings[ELLIPTIC_SYSTEM_CONFIGURATION_CUSTOM_SETTING_COUNT];
 	int32_t engine_suspend;
 	int32_t input_enabled;
@@ -209,6 +181,7 @@ struct elliptic_system_configuration_parameters_cache {
 	int32_t input_channels;
 	int32_t re_send;
 };
+
 
 int elliptic_trigger_version_msg(void);
 

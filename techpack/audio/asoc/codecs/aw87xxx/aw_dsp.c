@@ -5,9 +5,9 @@
  *
  * Author: Barry <zhaozhongbo@awinic.com>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation;  either version 2 of the License, or (at your
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
  * option) any later version.
  */
 
@@ -34,14 +34,14 @@ static int mtk_spk_send_ipi_buf_to_dsp(void *data_buffer,
 				uint32_t data_size)
 {
 	int *ret = (int *)data_buffer;
-	AW_LOGD("enter 0x%x", ret[6]);
+	AW_LOGI("enter 0x%x", ret[6]);
 	return 0;
 }
 
 static int mtk_spk_recv_ipi_buf_from_dsp(int8_t *buffer,
 				int16_t size, uint32_t *buf_len)
 {
-	AW_LOGD("enter");
+	AW_LOGI("enter");
 	return 0;
 }
 */
@@ -58,7 +58,7 @@ static int afe_get_topology(int port_id)
 static int aw_send_afe_cal_apr(uint32_t param_id,
 	void *buf, int cmd_size, bool write)
 {
-	AW_LOGD("enter, no define AWINIC_ADSP_ENABLE", __func__);
+	AW_LOGI("enter, no define AWINIC_ADSP_ENABLE", __func__);
 	return 0;
 }
 */
@@ -142,7 +142,7 @@ static int aw_qcom_write_data_to_dsp(int32_t param_id,
 	int ret = 0;
 	int try = 0;
 
-	AW_LOGD("enter");
+	AW_LOGI("enter");
 	mutex_lock(&g_dsp_lock);
 	while (try < AW_DSP_TRY_TIME) {
 		if (aw_check_dsp_ready()) {
@@ -167,7 +167,7 @@ static int aw_qcom_read_data_from_dsp(int32_t param_id,
 	int ret = 0;
 	int try = 0;
 
-	AW_LOGD("enter");
+	AW_LOGI("enter");
 
 	mutex_lock(&g_dsp_lock);
 	while (try < AW_DSP_TRY_TIME) {
@@ -237,9 +237,10 @@ int aw_dsp_set_rx_module_enable(int enable)
 	return ret;
 }
 
+
 int aw_dsp_get_vmax(uint32_t *vmax, int dev_index)
 {
-	int ret = 0;
+	int ret  = 0;
 	int32_t param_id = 0;
 
 	switch (dev_index % AW_DSP_CHANNEL_MAX) {
@@ -250,11 +251,10 @@ int aw_dsp_get_vmax(uint32_t *vmax, int dev_index)
 		param_id = AWDSP_RX_VMAX_1;
 		break;
 	default:
-		AW_LOGE("algo only support double PA channel: %d unsupport",
+		AW_LOGE("algo only support double PA channel:%d unsupport",
 			dev_index);
 		return -EINVAL;
 	}
-
 #ifdef AW_QCOM_OPEN_DSP_PLATFORM
 	ret = aw_qcom_read_data_from_dsp(param_id,
 			(void *)vmax, sizeof(uint32_t));
@@ -279,11 +279,10 @@ int aw_dsp_set_vmax(uint32_t vmax, int dev_index)
 		param_id = AWDSP_RX_VMAX_1;
 		break;
 	default:
-		AW_LOGE("algo only support double PA channel: %d unsupport",
+		AW_LOGE("algo only support double PA channel:%d unsupport",
 			dev_index);
 		return -EINVAL;
 	}
-
 #ifdef AW_QCOM_OPEN_DSP_PLATFORM
 	ret = aw_qcom_write_data_to_dsp(param_id, &vmax, sizeof(uint32_t));
 #elif defined AW_MTK_OPEN_DSP_PLATFORM

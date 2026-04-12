@@ -7962,11 +7962,6 @@ static int32_t qdsp_cvs_callback(struct apr_client_data *data, void *priv)
 
 		cvs_voc_pkt = v->shmem_info.sh_buf.buf[1].data;
 
-		if (!cvs_voc_pkt) {
-			pr_err("%s: cvs_voc_pkt is NULL\n", __func__);
-			return -EINVAL;
-		}
-
 		if (__builtin_add_overflow(cvs_voc_pkt[2], 3 * sizeof(uint32_t), &tot_buf_sz)) {
 			 pr_err("%s: integer overflow detected\n", __func__);
 			 return -EINVAL;
@@ -8050,7 +8045,7 @@ static int32_t qdsp_cvs_callback(struct apr_client_data *data, void *priv)
 		pr_debug("Send dec buf resp\n");
 	} else if (data->opcode == APR_RSP_ACCEPTED) {
 		ptr = data->payload;
-		if (ptr != NULL && ptr[0] !=0)
+		if (ptr[0])
 			pr_debug("%s: APR_RSP_ACCEPTED for 0x%x:\n",
 				 __func__, ptr[0]);
 	} else if (data->opcode == VSS_ISTREAM_EVT_NOT_READY) {
@@ -8061,7 +8056,7 @@ static int32_t qdsp_cvs_callback(struct apr_client_data *data, void *priv)
 		   data->opcode == VSS_ICOMMON_RSP_GET_PARAM_V3) {
 		pr_debug("%s: VSS_ICOMMON_RSP_GET_PARAM\n", __func__);
 		ptr = data->payload;
-		if (ptr != NULL && ptr[0] !=0) {
+		if (ptr[0] != 0) {
 			pr_err("%s: VSS_ICOMMON_RSP_GET_PARAM returned error = 0x%x\n",
 			       __func__, ptr[0]);
 		}

@@ -37,7 +37,7 @@
 #endif /* #ifdef CONFIG_SND_SOC_AW87XXX */
 
 #define WAKELOCK_TIMEOUT	5000
-#define AFE_CLK_TOKEN		1024
+#define AFE_CLK_TOKEN	1024
 #define AFE_NOWAIT_TOKEN	2048
 
 #define SP_V4_NUM_MAX_SPKRS SP_V2_NUM_MAX_SPKRS
@@ -1164,7 +1164,7 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 		if (NULL != data->payload)
 			elliptic_process_apr_payload(data->payload);
 		else
-			pr_err("[EXPORT_SYMBOLLUS]: payload ptr is Invalid\n");
+			pr_err("[EXPORT_SYMBOLLUS]: payload ptr is Invalid");
 #endif /* CONFIG_AUDIO_ELLIPTIC_ULTRASOUND */
 	} else if (data->payload_size) {
 		uint32_t *payload;
@@ -1206,10 +1206,10 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 			case AFE_SVC_CMD_SET_PARAM:
 			case AFE_SVC_CMD_SET_PARAM_V2:
 			case AFE_PORT_CMD_MOD_EVENT_CFG:
-				if (data->token == AFE_CLK_TOKEN) {
+				if(data->token == AFE_CLK_TOKEN) {
 					atomic_set(&this_afe.clk_state, 0);
 					wake_up(&this_afe.clk_wait);
-				} else if (data->token != AFE_NOWAIT_TOKEN) {
+				} else if(data->token != AFE_NOWAIT_TOKEN) {
 					atomic_set(&this_afe.state, 0);
 					if (afe_token_is_valid(data->token))
 						wake_up(&this_afe.wait[data->token]);
@@ -1386,12 +1386,12 @@ static int32_t afe_callback(struct apr_client_data *data, void *priv)
 
 #ifdef CONFIG_AUDIO_ELLIPTIC_ULTRASOUND
 afe_ultrasound_state_t elus_afe = {
-	.ptr_apr = &this_afe.apr,
-	.ptr_status = &this_afe.status,
-	.ptr_state = &this_afe.state,
-	.ptr_wait = this_afe.wait,
-	.ptr_afe_apr_lock = &this_afe.afe_apr_lock,
-	.timeout_ms = TIMEOUT_MS,
+	.ptr_apr= &this_afe.apr,
+	.ptr_status= &this_afe.status,
+	.ptr_state= &this_afe.state,
+	.ptr_wait= this_afe.wait,
+	.ptr_afe_apr_lock= &this_afe.afe_apr_lock,
+	.timeout_ms= TIMEOUT_MS,
 };
 EXPORT_SYMBOL(elus_afe);
 #endif /* CONFIG_AUDIO_ELLIPTIC_ULTRASOUND */
@@ -3078,7 +3078,12 @@ static int afe_send_hw_delay(u16 port_id, u32 rate)
 	delay_entry.sample_rate = rate;
 	if (afe_get_port_type(port_id) == MSM_AFE_PORT_TYPE_TX)
 		ret = afe_get_cal_hw_delay(TX_DEVICE, &delay_entry);
+#ifdef CONFIG_AUDIO_ELLIPTIC_ULTRASOUND
+	else if (afe_get_port_type(port_id) == MSM_AFE_PORT_TYPE_RX &&
+		port_id != AFE_PORT_ID_RX_CODEC_DMA_RX_1)
+#else
 	else if (afe_get_port_type(port_id) == MSM_AFE_PORT_TYPE_RX)
+#endif /* CONFIG_AUDIO_ELLIPTIC_ULTRASOUND */
 		ret = afe_get_cal_hw_delay(RX_DEVICE, &delay_entry);
 
 	/*
@@ -3135,6 +3140,12 @@ static struct cal_block_data *afe_find_cal_topo_id_by_port(
 			continue;
 		pr_info("%s: port id: 0x%x, dev_acdb_id: %d\n", __func__,
 			 port_id, this_afe.dev_acdb_id[afe_port_index]);
+#ifdef CONFIG_AUDIO_ELLIPTIC_ULTRASOUND
+		//need change from mixer_paths.xml
+		if (port_id == AFE_PORT_ID_RX_CODEC_DMA_RX_1) {
+			goto err_exit;
+		}
+#endif /* CONFIG_AUDIO_ELLIPTIC_ULTRASOUND */
 		path = ((afe_get_port_type(port_id) ==
 			MSM_AFE_PORT_TYPE_TX)?(TX_DEVICE):(RX_DEVICE));
 		afe_top =
@@ -3592,6 +3603,14 @@ static int send_afe_cal_type(int cal_index, int port_id)
 	struct cal_block_data		*cal_block = NULL;
 	int ret;
 	int afe_port_index = q6audio_get_port_index(port_id);
+
+#ifdef CONFIG_AUDIO_ELLIPTIC_ULTRASOUND
+	if (port_id == AFE_PORT_ID_RX_CODEC_DMA_RX_1) {
+		pr_warn("%s: port_id == AFE_PORT_ID_RX_CODEC_DMA_RX_1, return \n",__func__);
+		ret = -EINVAL;
+		goto done;
+	}
+#endif /* CONFIG_AUDIO_ELLIPTIC_ULTRASOUND */
 
 	pr_info("%s: cal_index is %d\n", __func__, cal_index);
 
@@ -11152,16 +11171,17 @@ static void afe_release_uevent_data(struct kobject *kobj)
 }
 
 #ifdef CONFIG_SND_SOC_AW87XXX
+
 int aw_send_afe_cal_apr(uint32_t param_id, void *buf, int cmd_size, bool write)
 {
 	int32_t result = 0, port_id = AFE_PORT_ID_AWDSP_RX;
-	int32_t module_id = AFE_MODULE_ID_AWDSP_RX;
+	int32_t  module_id = AFE_MODULE_ID_AWDSP_RX;
 	uint32_t port_index = 0;
 	uint32_t payload_size = 0;
 	size_t len;
 	struct rtac_cal_block_data *aw_cal = &(this_afe.aw_cal);
 	struct mem_mapping_hdr mem_hdr;
-	struct param_hdr_v3 param_hdr;
+	struct param_hdr_v3  param_hdr;
 
 	pr_debug("%s: enter\n", __func__);
 
@@ -11258,7 +11278,7 @@ int aw_send_afe_cal_apr(uint32_t param_id, void *buf, int cmd_size, bool write)
 		}
 		else {
 			/*Copy response data to command buffer*/
-			memcpy(buf, resp, cmd_size);
+			memcpy(buf,  resp,  cmd_size);
 		}
 	}
 err:

@@ -11,6 +11,7 @@
 #include <linux/slab.h>
 #include <linux/mm.h>
 
+
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/version.h>
@@ -31,6 +32,7 @@
 #include <linux/types.h>
 #include <linux/kdev_t.h>
 #include <linux/device.h>
+
 
 #include <linux/kernel.h>
 #include <linux/version.h>
@@ -57,6 +59,7 @@ struct elliptic_msm_io_device {
 
 /* static struct elliptic_msm_io_device io_device;*/
 
+
 int elliptic_data_io_initialize(void)
 {
 	return 0;
@@ -66,7 +69,6 @@ int elliptic_data_io_cleanup(void)
 {
 	return 0;
 }
-
 int elliptic_io_open_port(int portid)
 {
 	if (portid == ULTRASOUND_RX_PORT_ID)
@@ -101,6 +103,6 @@ int32_t elliptic_data_io_write(uint32_t message_id, const char *data,
 int32_t elliptic_data_io_transact(uint32_t message_id, const char *data,
 	size_t data_size, char *output_data, size_t output_data_size)
 {
-	pr_err("%s: unimplemented\n", __func__);
+	pr_err("%s : unimplemented\n", __func__);
 	return -EINVAL;
 }

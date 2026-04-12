@@ -1,10 +1,10 @@
 #ifndef __AW_BIN_PARSE_H__
 #define __AW_BIN_PARSE_H__
 
-#define NULL	((void *)0)
+#define NULL    ((void *)0)
 #define GET_32_DATA(w, x, y, z) ((unsigned int)(((w) << 24) | ((x) << 16) | ((y) << 8) | (z)))
-#define BIN_NUM_MAX	100
-#define HEADER_LEN	60
+#define BIN_NUM_MAX   100
+#define HEADER_LEN    60
 /*********************************************************
  *
  * header information

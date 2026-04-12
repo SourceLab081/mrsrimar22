@@ -823,8 +823,7 @@ static void wcd937x_mbhc_bcs_enable(struct wcd_mbhc *mbhc,
 void wcd937x_mbhc_test_ctrl(struct wcd_mbhc *mbhc, bool enable)
 {
 	struct snd_soc_component *component = mbhc->component;
-
-	if (enable) {
+	if(enable) {
 		snd_soc_component_update_bits(component, WCD937X_MBHC_TEST_CTL,
 				0xFF, 0x00);
 	} else {

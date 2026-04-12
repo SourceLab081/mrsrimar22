@@ -3963,12 +3963,6 @@ static int msm_compr_channel_map_put(struct snd_kcontrol *kcontrol,
 			pdata->ch_map[fe_id]->channel_map[i] =
 				(char)(ucontrol->value.integer.value[i]);
 
-		if (fe_id >= MSM_FRONTEND_DAI_MM_SIZE) {
-			pr_err("%s Received out of bounds fe_id %llu\n",
-				__func__, fe_id);
-			rc = -EINVAL;
-			goto end;
-		}
 		/* update chmixer_pspd chmap cached with routing driver as well */
 		chmixer_pspd = pdata->chmixer_pspd[fe_id];
 		if (chmixer_pspd && chmixer_pspd->enable) {
@@ -4032,21 +4026,19 @@ static int msm_compr_adsp_stream_cmd_put(struct snd_kcontrol *kcontrol,
 		return -EINVAL;
 	}
 
-	mutex_lock(&pdata->lock);
 	cstream = pdata->cstream[fe_id];
 	if (cstream == NULL) {
 		pr_err("%s cstream is null\n", __func__);
-		ret = -EINVAL;
-		goto done;
+		return -EINVAL;
 	}
 
 	prtd = cstream->runtime->private_data;
 	if (!prtd) {
 		pr_err("%s: prtd is null\n", __func__);
-		ret = -EINVAL;
-		goto done;
+		return -EINVAL;
 	}
 
+	mutex_lock(&pdata->lock);
 	if (prtd->audio_client == NULL) {
 		pr_err("%s: audio_client is null\n", __func__);
 		ret = -EINVAL;

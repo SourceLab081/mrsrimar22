@@ -38,8 +38,13 @@ struct driver_sensor_event {
 	};
 };
 
-static int afe_set_parameter(int port, int param_id, int module_id,
-		struct afe_ultrasound_set_params_t *prot_config, uint32_t length)
+
+
+static int afe_set_parameter(int port,
+		int param_id,
+		int module_id,
+		struct afe_ultrasound_set_params_t *prot_config,
+		uint32_t length)
 {
 	struct afe_port_cmd_set_param_v2 *set_param_v2 = NULL;
 	uint32_t set_param_v2_size = sizeof(struct afe_port_cmd_set_param_v2);
@@ -49,38 +54,19 @@ static int afe_set_parameter(int port, int param_id, int module_id,
 	u16 port_id = 0;
 	int index = 0;
 	u8 *packed_param_data = NULL;
-	int packed_data_size = 0;
+	int packed_data_size = sizeof(union param_hdrs) + length;
 	int ret = 0;
 
 	pr_debug("[ELUS]: inside %s\n", __func__);
 
-	if (!prot_config || length == 0) {
-		pr_err("%s: invalid args prot_config=%p length=%u\n",
-				__func__, prot_config, length);
-		return -EINVAL;
-	}
-
-	if (length > (UINT_MAX - sizeof(union param_hdrs))) {
-		pr_err("%s: length %u would overflow packed_data_size\n",
-				__func__, length);
-		return -EINVAL;
-	}
-	packed_data_size = sizeof(union param_hdrs) + length;
-
 	port_id = q6audio_get_port_id(port);
 	ret = q6audio_validate_port(port_id);
 	if (ret < 0) {
-		pr_err("%s: Not a valid port id = 0x%x, ret (%d)\n",
-				__func__, port_id, ret);
+		pr_err("%s: Not a valid port id = 0x%x ret %d\n", __func__,
+		       port_id, ret);
 		return -EINVAL;
 	}
-
 	index = q6audio_get_port_index(port);
-	if (index < 0) {
-		pr_err("%s: Invalid port index %d for port 0x%x\n",
-				__func__, index, port);
-		return -EINVAL;
-	}
 
 	param_hdr.module_id = module_id;
 	param_hdr.instance_id = INSTANCE_ID_0;
@@ -89,32 +75,30 @@ static int afe_set_parameter(int port, int param_id, int module_id,
 	pr_debug("[ELUS]: param_size %d\n", length);
 
 	packed_param_data = kzalloc(packed_data_size, GFP_KERNEL);
-	if (!packed_param_data) {
-		pr_err("%s: Failed to allocate packed param data\n", __func__);
+	if (packed_param_data == NULL)
 		return -ENOMEM;
-	}
 
-	ret = q6common_pack_pp_params(packed_param_data, &param_hdr,
-			(u8 *)prot_config, &packed_data_size);
+	ret = q6common_pack_pp_params(packed_param_data, &param_hdr, (u8 *)prot_config,
+				      &packed_data_size);
 	if (ret) {
-		pr_err("%s: Failed to pack param header and data, ret (%d)\n",
-				__func__, ret);
+		pr_err("%s: Failed to pack param header and data, error %d\n",
+		       __func__, ret);
 		goto fail_cmd;
 	}
 
 	if (q6common_is_instance_id_supported()) {
 		set_param_v3_size += packed_data_size;
 		set_param_v3 = kzalloc(set_param_v3_size, GFP_KERNEL);
-		if (!set_param_v3) {
+		if (set_param_v3 == NULL) {
 			ret = -ENOMEM;
 			goto fail_cmd;
 		}
 
 		set_param_v3->apr_hdr.hdr_field =
-			APR_HDR_FIELD(APR_MSG_TYPE_SEQ_CMD,
-					APR_HDR_LEN(APR_HDR_SIZE), APR_PKT_VER);
-		set_param_v3->apr_hdr.pkt_size = sizeof(*set_param_v3) +
-							packed_data_size;
+			APR_HDR_FIELD(APR_MSG_TYPE_SEQ_CMD, APR_HDR_LEN(APR_HDR_SIZE),
+					APR_PKT_VER);
+		set_param_v3->apr_hdr.pkt_size = sizeof(struct afe_port_cmd_set_param_v3) +
+											packed_data_size;
 		set_param_v3->apr_hdr.src_port = 0;
 		set_param_v3->apr_hdr.dest_port = 0;
 		set_param_v3->apr_hdr.token = index;
@@ -122,26 +106,24 @@ static int afe_set_parameter(int port, int param_id, int module_id,
 		set_param_v3->port_id = port_id;
 		set_param_v3->payload_size = packed_data_size;
 		memcpy(&set_param_v3->param_data, packed_param_data,
-				packed_data_size);
-
+			       packed_data_size);
 		mutex_lock(elus_afe.ptr_afe_apr_lock);
 		atomic_set(elus_afe.ptr_state, 1);
 		atomic_set(elus_afe.ptr_status, 0);
-		ret = apr_send_pkt(*elus_afe.ptr_apr, (uint32_t *)set_param_v3);
-		mutex_unlock(elus_afe.ptr_afe_apr_lock);
+		ret = apr_send_pkt(*elus_afe.ptr_apr, (uint32_t *) set_param_v3);
 	} else {
 		set_param_v2_size += packed_data_size;
 		set_param_v2 = kzalloc(set_param_v2_size, GFP_KERNEL);
-		if (!set_param_v2) {
+		if (set_param_v2 == NULL) {
 			ret = -ENOMEM;
 			goto fail_cmd;
 		}
 
 		set_param_v2->apr_hdr.hdr_field =
-			APR_HDR_FIELD(APR_MSG_TYPE_SEQ_CMD,
-					APR_HDR_LEN(APR_HDR_SIZE), APR_PKT_VER);
-		set_param_v2->apr_hdr.pkt_size = sizeof(*set_param_v2) +
-							packed_data_size;
+			APR_HDR_FIELD(APR_MSG_TYPE_SEQ_CMD, APR_HDR_LEN(APR_HDR_SIZE),
+				      APR_PKT_VER);
+		set_param_v2->apr_hdr.pkt_size = sizeof(struct afe_port_cmd_set_param_v2) +
+											packed_data_size;
 		set_param_v2->apr_hdr.src_port = 0;
 		set_param_v2->apr_hdr.dest_port = 0;
 		set_param_v2->apr_hdr.token = index;
@@ -149,51 +131,46 @@ static int afe_set_parameter(int port, int param_id, int module_id,
 		set_param_v2->port_id = port_id;
 		set_param_v2->payload_size = packed_data_size;
 		memcpy(&set_param_v2->param_data, packed_param_data,
-				packed_data_size);
-
+			       packed_data_size);
 		mutex_lock(elus_afe.ptr_afe_apr_lock);
 		atomic_set(elus_afe.ptr_state, 1);
 		atomic_set(elus_afe.ptr_status, 0);
-		ret = apr_send_pkt(*elus_afe.ptr_apr, (uint32_t *)set_param_v2);
-		mutex_unlock(elus_afe.ptr_afe_apr_lock);
+		ret = apr_send_pkt(*elus_afe.ptr_apr, (uint32_t *) set_param_v2);
 	}
-
 	if (ret < 0) {
-		pr_err("%s: Setting param for port %d param[0x%x] failed\n",
-				__func__, port, param_id);
-		goto fail_cmd;
+		pr_err("%s: Setting param for port %d param[0x%x]failed\n",
+			   __func__, port, param_id);
+		goto fail_cmd_lock;
 	}
-
 	ret = wait_event_timeout(elus_afe.ptr_wait[index],
 		(atomic_read(elus_afe.ptr_state) == 0),
 		msecs_to_jiffies(elus_afe.timeout_ms));
-	if (ret == 0) {
+	if (!ret) {
 		pr_err("%s: wait_event timeout\n", __func__);
-		ret = -ETIMEDOUT;
-		goto fail_cmd;
-	}
-
-	if (atomic_read(elus_afe.ptr_status) != 0) {
-		pr_err("%s: Set param cmd failed, DSP status %d\n",
-				__func__, atomic_read(elus_afe.ptr_status));
 		ret = -EINVAL;
-		goto fail_cmd;
+		goto fail_cmd_lock;
 	}
-
+	if (atomic_read(elus_afe.ptr_status) != 0) {
+		pr_err("%s: set param cmd failed\n", __func__);
+		ret = -EINVAL;
+		goto fail_cmd_lock;
+	}
 	ret = 0;
-
+fail_cmd_lock:
+	mutex_unlock(elus_afe.ptr_afe_apr_lock);
 fail_cmd:
-	pr_info("%s: param_id 0x%x status %d\n", __func__, param_id, ret);
-	kfree(set_param_v3);
+	pr_debug("%s param_id %x status %d\n", __func__, param_id, ret);
 	kfree(set_param_v2);
+	kfree(set_param_v3);
 	kfree(packed_param_data);
 	return ret;
 }
 
+
 int32_t ultrasound_apr_set_parameter(int32_t port_id, uint32_t param_id,
 	u8 *user_params, int32_t length) {
 
-	int32_t ret = 0;
+	int32_t  ret = 0;
 	uint32_t module_id;
 
 	if (port_id == ELLIPTIC_PORT_ID)
@@ -213,18 +190,15 @@ static int32_t process_version_msg(uint32_t *payload, uint32_t payload_size)
 {
 	struct elliptic_shared_data_block *data_block = NULL;
 	size_t copy_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
-	pr_debug("[ELUS]: %s() size: %d\n", __func__, payload_size);
+	pr_err("[ELUS]: %s() size:%d\n", __func__, payload_size);
 
 	if (payload_size >= ELLIPTIC_VERSION_INFO_SIZE) {
-		pr_debug("[ELUS]: elliptic_version copied to local AP cache\n");
-		data_block = elliptic_get_shared_obj(
+		pr_debug("[ELUS]: elliptic_version copied to local AP cache");
+		data_block =
+		elliptic_get_shared_obj(
 			ELLIPTIC_OBJ_ID_VERSION_INFO);
-		if (data_block == NULL) {
-			pr_err("[ELUS]: %s: shared obj ELLIPTIC_OBJ_ID_VERSION_INFO not found\n", __func__);
-			return -EINVAL;
-		}
 		copy_size = min_t(size_t, data_block->size,
 			(size_t)ELLIPTIC_VERSION_INFO_SIZE);
 
@@ -239,18 +213,15 @@ static int32_t process_branch_msg(uint32_t *payload, uint32_t payload_size)
 {
 	struct elliptic_shared_data_block *data_block = NULL;
 	size_t copy_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
-	pr_debug("[ELUS]: %s() size: %d\n", __func__, payload_size);
+	pr_err("[ELUS]: %s() size:%d\n", __func__, payload_size);
 
 	if (payload_size >= ELLIPTIC_BRANCH_INFO_SIZE) {
-		pr_debug("[ELUS]: elliptic_branch copied to local AP cache\n");
-		data_block = elliptic_get_shared_obj(
+		pr_debug("[ELUS]: elliptic_branch copied to local AP cache");
+		data_block =
+		elliptic_get_shared_obj(
 			ELLIPTIC_OBJ_ID_BRANCH_INFO);
-		if (data_block == NULL) {
-			pr_err("[ELUS]: %s: shared obj ELLIPTIC_OBJ_ID_BRANCH_INFO not found\n", __func__);
-			return -EINVAL;
-		}
 		copy_size = min_t(size_t, data_block->size,
 			(size_t)ELLIPTIC_BRANCH_INFO_MAX_SIZE);
 
@@ -265,18 +236,15 @@ static int32_t process_tag_msg(uint32_t *payload, uint32_t payload_size)
 {
 	struct elliptic_shared_data_block *data_block = NULL;
 	size_t copy_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
-	pr_debug("[ELUS]: %s() size: %d\n", __func__, payload_size);
+	pr_err("[ELUS]: %s() size:%d\n", __func__, payload_size);
 
 	if (payload_size >= ELLIPTIC_TAG_INFO_SIZE) {
-		pr_debug("[ELUS]: elliptic_tag copied to local AP cache\n");
-		data_block = elliptic_get_shared_obj(
+		pr_debug("[ELUS]: elliptic_tag copied to local AP cache");
+		data_block =
+		elliptic_get_shared_obj(
 			ELLIPTIC_OBJ_ID_TAG_INFO);
-		if (data_block == NULL) {
-			pr_err("[ELUS]: %s: shared obj ELLIPTIC_OBJ_ID_TAG_INFO not found\n", __func__);
-			return -EINVAL;
-		}
 		copy_size = min_t(size_t, data_block->size,
 			(size_t)ELLIPTIC_TAG_INFO_SIZE);
 
@@ -291,19 +259,15 @@ static int32_t process_calibration_msg(uint32_t *payload, uint32_t payload_size)
 {
 	struct elliptic_shared_data_block *data_block = NULL;
 	size_t copy_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
-	pr_debug("[ELUS]: %s() size: %d\n", __func__, payload_size);
+	pr_err("[ELUS]: %s() size:%d\n", __func__, payload_size);
 
 	if (payload_size >= ELLIPTIC_CALIBRATION_DATA_SIZE) {
-		pr_debug("[ELUS]: calibration_data copied to local AP cache\n");
+		pr_debug("[ELUS]: calibration_data copied to local AP cache");
 
 		data_block = elliptic_get_shared_obj(
 			ELLIPTIC_OBJ_ID_CALIBRATION_DATA);
-		if (data_block == NULL) {
-			pr_err("[ELUS]: %s: shared obj ELLIPTIC_OBJ_ID_CALIBRATION_DATA not found\n", __func__);
-			return -EINVAL;
-		}
 		copy_size = min_t(size_t, data_block->size,
 			(size_t)ELLIPTIC_CALIBRATION_DATA_SIZE);
 
@@ -319,19 +283,15 @@ static int32_t process_calibration_v2_msg(uint32_t *payload, uint32_t payload_si
 {
 	struct elliptic_shared_data_block *data_block = NULL;
 	size_t copy_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
-	pr_debug("[ELUS]: %s() size: %d\n", __func__, payload_size);
+	pr_err("[ELUS]: %s() size:%d\n", __func__, payload_size);
 
 	if (payload_size >= ELLIPTIC_CALIBRATION_V2_DATA_SIZE) {
-		pr_debug("[ELUS]: calibration_data copied to local AP cache\n");
+		pr_debug("[ELUS]: calibration_data copied to local AP cache");
 
 		data_block = elliptic_get_shared_obj(
 			ELLIPTIC_OBJ_ID_CALIBRATION_V2_DATA);
-		if (data_block == NULL) {
-			pr_err("[ELUS]: %s: shared obj ELLIPTIC_OBJ_ID_CALIBRATION_V2_DATA not found\n", __func__);
-			return -EINVAL;
-		}
 		copy_size = min_t(size_t, data_block->size,
 			(size_t)ELLIPTIC_CALIBRATION_V2_DATA_SIZE);
 
@@ -347,19 +307,15 @@ static int32_t process_ml_msg(uint32_t *payload, uint32_t payload_size)
 {
 	struct elliptic_shared_data_block *data_block = NULL;
 	size_t copy_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
-	pr_debug("[ELUS]: %s() size: %d\n", __func__, payload_size);
+	pr_err("[ELUS]: %s() size:%d\n", __func__, payload_size);
 
 	if (payload_size >= ELLIPTIC_ML_DATA_SIZE) {
-		pr_debug("[ELUS]: ml_data copied to local AP cache\n");
+		pr_debug("[ELUS]: ml_data copied to local AP cache");
 
 		data_block = elliptic_get_shared_obj(
 			ELLIPTIC_OBJ_ID_ML_DATA);
-		if (data_block == NULL) {
-			pr_err("[ELUS]: %s: shared obj ELLIPTIC_OBJ_ID_ML_DATA not found\n", __func__);
-			return -EINVAL;
-		}
 		copy_size = min_t(size_t, data_block->size,
 			(size_t)ELLIPTIC_ML_DATA_SIZE);
 
@@ -374,19 +330,15 @@ static int32_t process_diagnostics_msg(uint32_t *payload, uint32_t payload_size)
 {
 	struct elliptic_shared_data_block *data_block = NULL;
 	size_t copy_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
-	pr_debug("[ELUS]: %s() size: %d\n", __func__, payload_size);
+	pr_err("[ELUS]: %s() size:%d\n", __func__, payload_size);
 
 	if (payload_size >= ELLIPTIC_DIAGNOSTICS_DATA_SIZE) {
-		pr_debug("[ELUS]: diagnostics_data copied to local AP cache\n");
+		pr_debug("[ELUS]: diagnostics_data copied to local AP cache");
 
 		data_block = elliptic_get_shared_obj(
 			ELLIPTIC_OBJ_ID_DIAGNOSTICS_DATA);
-		if (data_block == NULL) {
-			pr_err("[ELUS]: %s: shared obj ELLIPTIC_OBJ_ID_DIAGNOSTICS_DATA not found\n", __func__);
-			return -EINVAL;
-		}
 		copy_size = min_t(size_t, data_block->size,
 			(size_t)ELLIPTIC_DIAGNOSTICS_DATA_SIZE);
 
@@ -399,9 +351,9 @@ static int32_t process_diagnostics_msg(uint32_t *payload, uint32_t payload_size)
 
 static int32_t process_sensorhub_msg(uint32_t *payload, uint32_t payload_size)
 {
-	int32_t ret = 0;
+	int32_t  ret = 0;
 
-	pr_debug("[ELUS]: %s, paramId:%u, size:%d\n",
+	pr_err("[ELUS]: %s, paramId:%u, size:%d\n",
 			__func__, payload[1], payload_size);
 
 	return ret;
@@ -410,14 +362,14 @@ static int32_t process_sensorhub_msg(uint32_t *payload, uint32_t payload_size)
 int32_t elliptic_process_apr_payload(uint32_t *payload)
 {
 	uint32_t payload_size = 0;
-	int32_t ret = -1;
+	int32_t  ret = -1;
 
 	if (payload[0] == ELLIPTIC_ULTRASOUND_MODULE_TX) {
 		/* payload format
 		*   payload[0] = Module ID
 		*   payload[1] = Param ID
 		*   payload[2] = LSB - payload size
-		*        MSB - reserved(TBD)
+		*		MSB - reserved(TBD)
 		*   payload[3] = US data payload starts from here
 		*/
 		payload_size = payload[2] & 0xFFFF;
@@ -448,17 +400,22 @@ int32_t elliptic_process_apr_payload(uint32_t *payload)
 			ret = process_sensorhub_msg(payload, payload_size);
 			break;
 		case ELLIPTIC_ULTRASOUND_PARAM_ID_ENGINE_DATA:
-			ret = elliptic_data_push(ELLIPTIC_ALL_DEVICES,
-				(const char *)&payload[3], (size_t)payload_size,
+			ret = elliptic_data_push(
+				ELLIPTIC_ALL_DEVICES,
+				(const char *)&payload[3],
+				(size_t)payload_size,
 				ELLIPTIC_DATA_PUSH_FROM_KERNEL);
+
 			if (ret != 0) {
-				pr_err("[ELUS]: failed to push apr payload to elliptic device\n");
+				pr_err("[ELUS] : failed to push apr payload to elliptic device");
 				return ret;
 			}
 			ret = payload_size;
 			break;
 		default:
-			pr_err("[ELUS]: elliptic_process_apr_payload, Illegal paramId: %u\n", payload[1]);
+			{
+				pr_err("[ELUS] : elliptic_process_apr_payload, Illegal paramId:%u", payload[1]);
+			}
 			break;
 		}
 	} else {
@@ -476,17 +433,17 @@ int elliptic_set_hall_state(int state)
 	dse.type = DRIVER_SENSOR_HALL;
 
 	switch (state) {
-	case 0:
-		dse.event = HALL_SLIDER_UP;
+		case 0:
+			dse.event = HALL_SLIDER_UP;
 		break;
-	case 1:
-		dse.event = HALL_SLIDER_DOWN;
+		case 1:
+			dse.event = HALL_SLIDER_DOWN;
 		break;
-	case 2:
-		dse.event = HALL_SLIDING;
+		case 2:
+			dse.event = HALL_SLIDING;
 		break;
-	default:
-		pr_err("%s Invalid HALL state: %d\n", __func__, state);
+		default:
+			pr_err("%s Invalid HALL state:%d\n", __func__, state);
 		return ret;
 	}
 

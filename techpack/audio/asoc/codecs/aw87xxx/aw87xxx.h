@@ -53,6 +53,7 @@ struct aw_componet_codec_ops {
 	void (*unregister_codec)(struct device *dev);
 };
 
+
 /********************************************
  *
  * aw87xxx devices attributes
@@ -84,6 +85,7 @@ struct aw_i2c_packet {
 	unsigned int reg_addr;
 	char *reg_data;
 };
+
 
 /********************************************
  *

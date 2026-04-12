@@ -5,9 +5,9 @@
  *
  * Author: Barry <zhaozhongbo@awinic.com>
  *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the
- * Free Software Foundation;  either version 2 of the License, or (at your
+ * This program is free software; you can redistribute  it and/or modify it
+ * under  the terms of  the GNU General  Public License as published by the
+ * Free Software Foundation;  either version 2 of the  License, or (at your
  * option) any later version.
  */
 #include <linux/module.h>
@@ -17,6 +17,7 @@
 #include <linux/fs.h>
 #include <linux/device.h>
 #include <linux/kernel.h>
+#include <linux/power_supply.h>
 #include <linux/of.h>
 #include <linux/power_supply.h>
 #include <linux/hrtimer.h>
@@ -81,7 +82,6 @@ static int aw_monitor_check_header_v_1_0_0(struct device *dev,
 			break;
 		}
 	}
-
 	if (i == AW_MONITOR_DATA_VER_MAX)
 		return -EINVAL;
 
@@ -119,7 +119,7 @@ static int aw_monitor_check_data_v1_size(struct device *dev,
 static int aw_monitor_check_data_size(struct device *dev,
 			char *data, int32_t data_len)
 {
-	int ret = 0;
+	int ret = -1;
 	struct aw_bin_header *header = (struct aw_bin_header *)data;
 
 	switch (header->bin_data_ver) {
@@ -137,10 +137,11 @@ static int aw_monitor_check_data_size(struct device *dev,
 	return 0;
 }
 
+
 static int aw_monitor_check_bin_header(struct device *dev,
 				char *data, int32_t data_len)
 {
-	int ret = 0;
+	int ret = -1;
 	struct aw_bin_header *header = NULL;
 
 	if (data_len < sizeof(struct aw_bin_header)) {
@@ -189,7 +190,7 @@ static int aw_monitor_bin_check_sum(struct device *dev,
 static int aw_monitor_bin_check(struct device *dev,
 				char *monitor_data, uint32_t data_len)
 {
-	int ret = 0;
+	int ret = -1;
 
 	if (monitor_data == NULL || data_len == 0) {
 		AW_DEV_LOGE(dev, "none data to parse");
@@ -250,7 +251,7 @@ static void aw_monitor_write_to_table_v1(struct device *dev,
 	}
 
 	for (i = 0; i < step_count; i++)
-		AW_DEV_LOGD(dev, "vbat_min:%d, vbat_max:%d, vmax_vol:0x%x",
+		AW_DEV_LOGI(dev, "vbat_min:%d, vbat_max%d, vmax_vol:0x%x",
 			vmax_step[i].vbat_min,
 			vmax_step[i].vbat_max,
 			vmax_step[i].vmax_vol);
@@ -282,7 +283,7 @@ static int aw_monitor_parse_vol_data_v1(struct device *dev,
 	aw_monitor_write_to_table_v1(dev, vmax_step, vmax_data, step_count);
 	monitor->vmax_cfg = vmax_step;
 
-	AW_DEV_LOGD(dev, "vmax_data parse succeed");
+	AW_DEV_LOGI(dev, "vmax_data parse succeed");
 
 	return 0;
 }
@@ -290,7 +291,7 @@ static int aw_monitor_parse_vol_data_v1(struct device *dev,
 static int aw_monitor_parse_data_v1(struct device *dev,
 			struct aw_monitor *monitor, char *monitor_data)
 {
-	int ret = 0;
+	int ret = -1;
 	int header_len = 0;
 	struct aw_monitor_header *monitor_hdr = &monitor->monitor_hdr;
 
@@ -298,7 +299,7 @@ static int aw_monitor_parse_data_v1(struct device *dev,
 	memcpy(monitor_hdr, monitor_data + header_len,
 		sizeof(struct aw_monitor_header));
 
-	AW_DEV_LOGD(dev, "monitor_switch:%d, monitor_time:%d(ms), monitor_count:%d, step_count:%d",
+	AW_DEV_LOGI(dev, "monitor_switch:%d, monitor_time:%d (ms), monitor_count:%d, step_count:%d",
 		monitor_hdr->monitor_switch, monitor_hdr->monitor_time,
 		monitor_hdr->monitor_count, monitor_hdr->step_count);
 
@@ -313,10 +314,11 @@ static int aw_monitor_parse_data_v1(struct device *dev,
 	return 0;
 }
 
+
 static int aw_monitor_parse_v_1_0_0(struct device *dev,
 			struct aw_monitor *monitor, char *monitor_data)
 {
-	int ret = 0;
+	int ret = -1;
 	struct aw_bin_header *header = (struct aw_bin_header *)monitor_data;
 
 	switch (header->bin_data_ver) {
@@ -349,7 +351,7 @@ void aw_monitor_cfg_free(struct aw_monitor *monitor)
 int aw_monitor_bin_parse(struct device *dev,
 				char *monitor_data, uint32_t data_len)
 {
-	int ret = 0;
+	int ret = -1;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = NULL;
 	struct aw_bin_header *bin_header = NULL;
@@ -362,7 +364,7 @@ int aw_monitor_bin_parse(struct device *dev,
 	monitor = &aw87xxx->monitor;
 	monitor->bin_status = AW_MONITOR_CFG_WAIT;
 
-	AW_DEV_LOGD(dev, "monitor bin parse version: %s",
+	AW_DEV_LOGI(dev, "monitor bin parse version: %s",
 			AW_MONITOT_BIN_PARSE_VERSION);
 
 	ret = aw_monitor_bin_check(dev, monitor_data, data_len);
@@ -399,28 +401,24 @@ static int aw_monitor_get_battery_capacity(struct device *dev,
 				uint32_t *vbat_capacity)
 {
 	char name[] = "battery";
-	int ret = 0;
+	int ret = -1;
 	union power_supply_propval prop = { 0 };
 	struct power_supply *psy = NULL;
 
 	psy = power_supply_get_by_name(name);
 	if (psy == NULL) {
-		AW_DEV_LOGE(dev, "no struct power supply name: %s", name);
+		AW_DEV_LOGE(dev, "no struct power supply name:%s", name);
 		return -EINVAL;
 	}
 
 	ret = power_supply_get_property(psy, POWER_SUPPLY_PROP_CAPACITY, &prop);
 	if (ret < 0) {
 		AW_DEV_LOGE(dev, "get vbat capacity failed");
-		if (psy)
-			power_supply_put(psy);
 		return -EINVAL;
 	}
-
 	*vbat_capacity = prop.intval;
-	AW_DEV_LOGD(dev, "The percentage is %d", *vbat_capacity);
-	if (psy)
-		power_supply_put(psy);
+	AW_DEV_LOGI(dev, "The percentage is %d",
+		*vbat_capacity);
 
 	return 0;
 }
@@ -453,7 +451,7 @@ static int aw_search_vmax_from_table(struct device *dev,
 			vbat_vol < vmax_cfg[i].vbat_max) {
 			vmax_set = vmax_cfg[i].vmax_vol;
 			vmax_flag = 1;
-			AW_DEV_LOGD(dev, "read setting vmax=0x%x, step[%d]: vbat_min=%d, vbat_max=%d",
+			AW_DEV_LOGD(dev, "read setting vmax=0x%x, step[%d]: vbat_min=%d,vbat_max=%d",
 				vmax_set, i,
 				vmax_cfg[i].vbat_min,
 				vmax_cfg[i].vbat_max);
@@ -470,6 +468,7 @@ static int aw_search_vmax_from_table(struct device *dev,
 	return 0;
 }
 
+
 /***************************************************************************
  *
  *monitor_esd_func
@@ -477,7 +476,7 @@ static int aw_search_vmax_from_table(struct device *dev,
  ***************************************************************************/
 static int aw_chip_status_recover(struct aw87xxx *aw87xxx)
 {
-	int ret = 0;
+	int ret = -1;
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 	char *profile = aw87xxx->current_profile;
 
@@ -485,12 +484,12 @@ static int aw_chip_status_recover(struct aw87xxx *aw87xxx)
 
 	ret = aw87xxx_esd_update_profile(aw87xxx, profile);
 	if (ret < 0) {
-		AW_DEV_LOGE(aw87xxx->dev, "load profile[%s] failed",
+		AW_DEV_LOGE(aw87xxx->dev, "load profile[%s] failed ",
 			profile);
 		return ret;
 	}
 
-	AW_DEV_LOGD(aw87xxx->dev, "current prof[%s], dev_index[%d]",
+	AW_DEV_LOGI(aw87xxx->dev, "current prof[%s], dev_index[%d] ",
 			profile, aw87xxx->dev_index);
 
 	monitor->pre_vmax = AW_VMAX_INIT_VAL;
@@ -520,13 +519,14 @@ static int aw_monitor_chip_esd_check_work(struct aw87xxx *aw87xxx)
 	}
 
 	if (ret < 0) {
-		AW_DEV_LOGE(aw87xxx->dev, "chip status recover failed, chip off");
+		AW_DEV_LOGE(aw87xxx->dev, "chip status recover failed,chip off");
 		aw87xxx_esd_update_profile(aw87xxx, aw87xxx->prof_off_name);
 		return ret;
 	}
 
 	return 0;
 }
+
 
 /***************************************************************************
  *
@@ -536,7 +536,7 @@ static int aw_monitor_chip_esd_check_work(struct aw87xxx *aw87xxx)
 static int aw_monitor_update_vmax_to_dsp(struct device *dev,
 				struct aw_monitor *monitor, int vmax_set)
 {
-	int ret = 0;
+	int ret = -1;
 	uint32_t enable = 0;
 
 	if (monitor->pre_vmax != vmax_set) {
@@ -553,10 +553,10 @@ static int aw_monitor_update_vmax_to_dsp(struct device *dev,
 			return ret;
 		}
 
-		AW_DEV_LOGD(dev, "set dsp vmax=0x%x sucess", vmax_set);
+		AW_DEV_LOGI(dev, "set dsp vmax=0x%x sucess", vmax_set);
 		monitor->pre_vmax = vmax_set;
 	} else {
-		AW_DEV_LOGD(dev, "vmax=0x%x no change", vmax_set);
+		AW_DEV_LOGI(dev, "vmax=0x%x no change", vmax_set);
 	}
 
 	return 0;
@@ -565,7 +565,7 @@ static int aw_monitor_update_vmax_to_dsp(struct device *dev,
 static void aw_monitor_with_dsp_vmax_work(struct device *dev,
 					struct aw_monitor *monitor)
 {
-	int ret = 0;
+	int ret = -1;
 	int vmax_set = 0;
 	uint32_t vbat_capacity = 0;
 	uint32_t ave_capacity = 0;
@@ -580,10 +580,9 @@ static void aw_monitor_with_dsp_vmax_work(struct device *dev,
 	if (monitor->timer_cnt < monitor_hdr->monitor_count) {
 		monitor->timer_cnt++;
 		monitor->vbat_sum += vbat_capacity;
-			AW_DEV_LOGD(dev, "timer_cnt = %d",
+			AW_DEV_LOGI(dev, "timer_cnt = %d",
 			monitor->timer_cnt);
 	}
-
 	if ((monitor->timer_cnt >= monitor_hdr->monitor_count) ||
 	    (monitor->first_entry == AW_FIRST_ENTRY)) {
 		if (monitor->first_entry == AW_FIRST_ENTRY)
@@ -593,7 +592,7 @@ static void aw_monitor_with_dsp_vmax_work(struct device *dev,
 		if (monitor->custom_capacity)
 			ave_capacity = monitor->custom_capacity;
 
-		AW_DEV_LOGD(dev, "get average capacity = %d", ave_capacity);
+		AW_DEV_LOGI(dev, "get average capacity = %d", ave_capacity);
 
 		ret = aw_search_vmax_from_table(dev, monitor,
 				ave_capacity, &vmax_set);
@@ -693,8 +692,7 @@ int aw_monitor_no_dsp_get_vmax(struct aw_monitor *monitor, int32_t *vmax)
 
 	if (monitor->custom_capacity)
 		vbat_capacity = monitor->custom_capacity;
-
-	AW_DEV_LOGD(dev, "get_battery_capacity is[%d]", vbat_capacity);
+	AW_DEV_LOGI(dev, "get_battery_capacity is[%d]", vbat_capacity);
 
 	ret = aw_search_vmax_from_table(dev, monitor,
 				vbat_capacity, &vmax_vol);
@@ -706,6 +704,7 @@ int aw_monitor_no_dsp_get_vmax(struct aw_monitor *monitor, int32_t *vmax)
 	*vmax = vmax_vol;
 	return 0;
 }
+
 
 /***************************************************************************
  *
@@ -720,11 +719,11 @@ static ssize_t aw_attr_get_esd_enable(struct device *dev,
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 
 	if (monitor->esd_enable) {
-		AW_DEV_LOGD(aw87xxx->dev, "esd-enable=true");
+		AW_DEV_LOGI(aw87xxx->dev, "esd-enable=true");
 		len += snprintf(buf + len, PAGE_SIZE - len,
 			"esd-enable=true\n");
 	} else {
-		AW_DEV_LOGD(aw87xxx->dev, "esd-enable=false");
+		AW_DEV_LOGI(aw87xxx->dev, "esd-enable=false");
 		len += snprintf(buf + len, PAGE_SIZE - len,
 			"esd-enable=false\n");
 	}
@@ -745,7 +744,7 @@ static ssize_t aw_attr_set_esd_enable(struct device *dev,
 			monitor->esd_enable = AW_ESD_ENABLE;
 		else
 			monitor->esd_enable = AW_ESD_DISABLE;
-		AW_DEV_LOGD(dev, "set esd-enable=[%s]",
+		AW_DEV_LOGI(dev, "set esd-enable=[%s]",
 				monitor->esd_enable ? "true" : "false");
 	} else {
 		AW_DEV_LOGE(aw87xxx->dev, "input esd-enable error");
@@ -759,7 +758,7 @@ static ssize_t aw_attr_get_vbat(struct device *dev,
 				struct device_attribute *attr, char *buf)
 {
 	ssize_t len = 0;
-	int ret = 0;
+	int ret = -1;
 	int vbat_capacity = 0;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
@@ -785,7 +784,7 @@ static ssize_t aw_attr_get_vbat(struct device *dev,
 static ssize_t aw_attr_set_vbat(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t len)
 {
-	int ret = 0;
+	int ret = -1;
 	uint32_t capacity = 0;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
@@ -793,13 +792,12 @@ static ssize_t aw_attr_set_vbat(struct device *dev,
 	ret = kstrtouint(buf, 0, &capacity);
 	if (ret < 0)
 		return ret;
-
-	AW_DEV_LOGD(aw87xxx->dev, "set capacity = %d", capacity);
+	AW_DEV_LOGI(aw87xxx->dev, "set capacity = %d", capacity);
 	if (capacity >= AW_VBAT_CAPACITY_MIN &&
-			capacity <= AW_VBAT_CAPACITY_MAX) {
+			capacity <= AW_VBAT_CAPACITY_MAX){
 		monitor->custom_capacity = capacity;
 	} else {
-		AW_DEV_LOGE(aw87xxx->dev, "vbat_set=invalid, please input value [%d-%d]",
+		AW_DEV_LOGE(aw87xxx->dev, "vbat_set=invalid,please input value [%d-%d]",
 			AW_VBAT_CAPACITY_MIN, AW_VBAT_CAPACITY_MAX);
 		return -EINVAL;
 	}
@@ -811,7 +809,7 @@ static ssize_t aw_attr_get_vmax(struct device *dev,
 			struct device_attribute *attr, char *buf)
 {
 	ssize_t len = 0;
-	int ret = 0;
+	int ret = -1;
 	uint32_t vbat_capacity = 0;
 	int vmax_get = 0;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
@@ -828,31 +826,29 @@ static ssize_t aw_attr_get_vmax(struct device *dev,
 				"get_vmax=0x%x\n", vmax_get);
 	} else {
 		ret = aw_monitor_get_battery_capacity(dev, monitor,
-				&vbat_capacity);
+						&vbat_capacity);
 		if (ret < 0)
 			return ret;
-
-		AW_DEV_LOGD(aw87xxx->dev, "get_battery_capacity is [%d]",
+		AW_DEV_LOGI(aw87xxx->dev, "get_battery_capacity is [%d]",
 			vbat_capacity);
 
 		if (monitor->custom_capacity) {
 			vbat_capacity = monitor->custom_capacity;
-			AW_DEV_LOGD(aw87xxx->dev, "get custom_capacity is [%d]",
+			AW_DEV_LOGI(aw87xxx->dev, "get custom_capacity is [%d]",
 				vbat_capacity);
 		}
 
 		ret = aw_search_vmax_from_table(aw87xxx->dev, monitor,
-				vbat_capacity, &vmax_get);
+					vbat_capacity, &vmax_get);
 		if (ret < 0) {
 			AW_DEV_LOGE(aw87xxx->dev, "not find vmax_vol");
 			len += snprintf(buf + len, PAGE_SIZE - len,
 				"not_find_vmax_vol\n");
 			return len;
 		}
-
 		len += snprintf(buf + len, PAGE_SIZE - len,
 			"0x%x\n", vmax_get);
-		AW_DEV_LOGD(aw87xxx->dev, "0x%x", vmax_get);
+		AW_DEV_LOGI(aw87xxx->dev, "0x%x", vmax_get);
 	}
 
 	return len;
@@ -862,7 +858,7 @@ static ssize_t aw_attr_set_vmax(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
 	uint32_t vmax_set = 0;
-	int ret = 0;
+	int ret = -1;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 
@@ -870,12 +866,12 @@ static ssize_t aw_attr_set_vmax(struct device *dev,
 	if (ret < 0)
 		return ret;
 
-	AW_DEV_LOGD(aw87xxx->dev, "vmax_set=0x%x", vmax_set);
+	AW_DEV_LOGI(aw87xxx->dev, "vmax_set=0x%x", vmax_set);
 
 	if (monitor->open_dsp_en) {
 		ret = aw_dsp_set_vmax(vmax_set, aw87xxx->dev_index);
 		if (ret < 0) {
-			AW_DEV_LOGE(aw87xxx->dev, "send dsp_msg error, ret=%d",
+			AW_DEV_LOGE(aw87xxx->dev, "send dsp_msg error, ret = %d",
 				ret);
 			return ret;
 		}
@@ -906,7 +902,7 @@ static ssize_t aw_attr_set_monitor_switch(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
 	uint32_t enable = 0;
-	int ret = 0;
+	int ret = -1;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 	struct aw_monitor_header *monitor_hdr = &monitor->monitor_hdr;
@@ -914,11 +910,10 @@ static ssize_t aw_attr_set_monitor_switch(struct device *dev,
 	ret = kstrtouint(buf, 0, &enable);
 	if (ret < 0)
 		return ret;
-
-	AW_DEV_LOGD(aw87xxx->dev, "monitor switch set=%d", enable);
+	AW_DEV_LOGI(aw87xxx->dev, "monitor switch set =%d", enable);
 
 	if (!monitor->bin_status) {
-		AW_DEV_LOGE(aw87xxx->dev, "bin parse faile or not loaded, set invalid");
+		AW_DEV_LOGE(aw87xxx->dev, "bin parse faile or not loaded,set invalid");
 		return -EINVAL;
 	}
 
@@ -936,7 +931,6 @@ static ssize_t aw_attr_set_monitor_switch(struct device *dev,
 	} else if (monitor->open_dsp_en && !enable) {
 		monitor_hdr->monitor_switch = 0;
 	}
-
 	return count;
 }
 
@@ -949,7 +943,7 @@ static ssize_t aw_attr_get_monitor_time(struct device *dev,
 	struct aw_monitor_header *monitor_hdr = &monitor->monitor_hdr;
 
 	len += snprintf(buf + len, PAGE_SIZE - len,
-			"aw_monitor_timer=%d(ms)\n",
+			"aw_monitor_timer = %d(ms)\n",
 			monitor_hdr->monitor_time);
 	return len;
 }
@@ -958,7 +952,7 @@ static ssize_t aw_attr_set_monitor_time(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
 	unsigned int timer_val = 0;
-	int ret = 0;
+	int ret = -1;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 	struct aw_monitor_header *monitor_hdr = &monitor->monitor_hdr;
@@ -967,17 +961,17 @@ static ssize_t aw_attr_set_monitor_time(struct device *dev,
 	if (ret < 0)
 		return ret;
 
-	AW_DEV_LOGD(aw87xxx->dev, "input monitor timer=%d(ms)", timer_val);
+	AW_DEV_LOGI(aw87xxx->dev, "input monitor timer=%d(ms)", timer_val);
 
 	if (!monitor->bin_status) {
-		AW_DEV_LOGE(aw87xxx->dev, "bin parse faile or not loaded, set invalid");
+		AW_DEV_LOGE(aw87xxx->dev, "bin parse faile or not loaded,set invalid");
 		return -EINVAL;
 	}
 
 	if (timer_val != monitor_hdr->monitor_time)
 		monitor_hdr->monitor_time = timer_val;
 	else
-		AW_DEV_LOGD(aw87xxx->dev, "no_change monitor_time");
+		AW_DEV_LOGI(aw87xxx->dev, "no_change monitor_time");
 
 	return count;
 }
@@ -991,7 +985,7 @@ static ssize_t aw_attr_get_monitor_count(struct device *dev,
 	struct aw_monitor_header *monitor_hdr = &monitor->monitor_hdr;
 
 	len += snprintf(buf + len, PAGE_SIZE - len,
-			"aw_monitor_count=%d\n",
+			"aw_monitor_count = %d\n",
 			monitor_hdr->monitor_count);
 	return len;
 }
@@ -1000,7 +994,7 @@ static ssize_t aw_attr_set_monitor_count(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
 	unsigned int monitor_count = 0;
-	int ret = 0;
+	int ret = -1;
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 	struct aw_monitor_header *monitor_hdr = &monitor->monitor_hdr;
@@ -1008,21 +1002,21 @@ static ssize_t aw_attr_set_monitor_count(struct device *dev,
 	ret = kstrtouint(buf, 0, &monitor_count);
 	if (ret < 0)
 		return ret;
-
-	AW_DEV_LOGD(aw87xxx->dev, "input monitor count=%d", monitor_count);
+	AW_DEV_LOGI(aw87xxx->dev, "input monitor count=%d", monitor_count);
 
 	if (!monitor->bin_status) {
-		AW_DEV_LOGE(aw87xxx->dev, "bin parse faile or not loaded, set invalid");
+		AW_DEV_LOGE(aw87xxx->dev, "bin parse faile or not loaded,set invalid");
 		return -EINVAL;
 	}
 
 	if (monitor_count != monitor_hdr->monitor_count)
 		monitor_hdr->monitor_count = monitor_count;
 	else
-		AW_DEV_LOGD(aw87xxx->dev, "no_change monitor_count");
+		AW_DEV_LOGI(aw87xxx->dev, "no_change monitor_count");
 
 	return count;
 }
+
 
 static ssize_t aw_attr_get_rx(struct device *dev,
 			struct device_attribute *attr, char *buf)
@@ -1030,7 +1024,7 @@ static ssize_t aw_attr_get_rx(struct device *dev,
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
 	ssize_t len = 0;
-	int ret = 0;
+	int ret = -1;
 	uint32_t enable = 0;
 
 	if (monitor->open_dsp_en) {
@@ -1054,7 +1048,7 @@ static ssize_t aw_attr_set_rx(struct device *dev,
 {
 	struct aw87xxx *aw87xxx = dev_get_drvdata(dev);
 	struct aw_monitor *monitor = &aw87xxx->monitor;
-	int ret = 0;
+	int ret = -1;
 	uint32_t enable;
 
 	ret = kstrtouint(buf, 0, &enable);
@@ -1062,7 +1056,7 @@ static ssize_t aw_attr_set_rx(struct device *dev,
 		return ret;
 
 	if (monitor->open_dsp_en) {
-		AW_DEV_LOGD(aw87xxx->dev, "set rx enable=%d", enable);
+		AW_DEV_LOGI(aw87xxx->dev, "set rx enable=%d", enable);
 
 		ret = aw_dsp_set_rx_module_enable(enable);
 		if (ret < 0) {
@@ -1077,6 +1071,7 @@ static ssize_t aw_attr_set_rx(struct device *dev,
 
 	return count;
 }
+
 
 static DEVICE_ATTR(esd_enable, S_IWUSR | S_IRUGO,
 	aw_attr_get_esd_enable, aw_attr_set_esd_enable);
@@ -1131,7 +1126,7 @@ static void aw_monitor_dtsi_parse(struct device *dev,
 
 	ret = of_property_read_string(dev_node, "esd-enable", &esd_enable);
 	if (ret < 0) {
-		AW_DEV_LOGD(dev, "esd_enable parse failed, user default[disable]");
+		AW_DEV_LOGI(dev, "esd_enable parse failed, user default[disable]");
 		monitor->esd_enable = AW_ESD_DISABLE;
 	} else {
 		if (!strcmp(esd_enable, "true"))
@@ -1139,7 +1134,7 @@ static void aw_monitor_dtsi_parse(struct device *dev,
 		else
 			monitor->esd_enable = AW_ESD_DISABLE;
 
-		AW_DEV_LOGD(dev, "parse esd-enable=[%s]",
+		AW_DEV_LOGI(dev, "parse esd-enable=[%s]",
 				monitor->esd_enable ? "true" : "false");
 	}
 }
@@ -1147,7 +1142,7 @@ static void aw_monitor_dtsi_parse(struct device *dev,
 void aw_monitor_init(struct device *dev, struct aw_monitor *monitor,
 				struct device_node *dev_node)
 {
-	int ret = 0;
+	int ret = -1;
 	struct aw87xxx *aw87xxx =
 		container_of(monitor, struct aw87xxx, monitor);
 
@@ -1172,7 +1167,7 @@ void aw_monitor_init(struct device *dev, struct aw_monitor *monitor,
 	}
 
 	if (!ret)
-		AW_DEV_LOGD(dev, "monitor init succeed");
+		AW_DEV_LOGI(dev, "monitor init succeed");
 }
 
 void aw_monitor_exit(struct aw_monitor *monitor)
@@ -1190,3 +1185,4 @@ void aw_monitor_exit(struct aw_monitor *monitor)
 				&aw_monitor_control_group);
 	}
 }
+

@@ -35,14 +35,13 @@
 
 #define AWINIC_CODE_VERSION "V0.0.7-V1.0.4"	/* "code version"-"excel version" */
 
-//#define DEBUG_LOG_LEVEL
+#define DEBUG_LOG_LEVEL
 #ifdef DEBUG_LOG_LEVEL
-#define DBG(fmt, arg...) do { \
-	printk("AWINIC_BIN %s,line= %d,"fmt, __func__, __LINE__, ##arg); \
+#define DBG(fmt, arg...)   do {\
+printk("AWINIC_BIN %s,line= %d,"fmt, __func__, __LINE__, ##arg);\
 } while (0)
-
-#define DBG_ERR(fmt, arg...) do { \
-	printk("AWINIC_BIN_ERR %s,line= %d,"fmt, __func__, __LINE__, ##arg); \
+#define DBG_ERR(fmt, arg...)   do {\
+printk("AWINIC_BIN_ERR %s,line= %d,"fmt, __func__, __LINE__, ##arg);\
 } while (0)
 #else
 #define DBG(fmt, arg...) do {} while (0)
@@ -55,7 +54,7 @@ typedef unsigned short int aw_uint16;
 typedef unsigned long int aw_uint32;
 
 #define BigLittleSwap16(A)	((((aw_uint16)(A) & 0xff00) >> 8) | \
-				(((aw_uint16)(A) & 0x00ff) << 8))
+				 (((aw_uint16)(A) & 0x00ff) << 8))
 
 #define BigLittleSwap32(A)	((((aw_uint32)(A) & 0xff000000) >> 24) | \
 				(((aw_uint32)(A) & 0x00ff0000) >> 8) | \
@@ -93,23 +92,26 @@ int aw_check_sum(struct aw_bin *bin, int bin_num)
 
 	DBG("enter\n");
 
-	p_check_sum = &(bin->info.data[(bin->header_info[bin_num].valid_data_addr -
-				bin->header_info[bin_num].header_len)]);
-	DBG("aw_bin_parse p_check_sum=%p\n", p_check_sum);
+	p_check_sum =
+	    &(bin->info.data[(bin->header_info[bin_num].valid_data_addr -
+			      bin->header_info[bin_num].header_len)]);
+	DBG("aw_bin_parse p_check_sum = %p\n", p_check_sum);
 	check_sum = GET_32_DATA(*(p_check_sum + 3),
 				*(p_check_sum + 2),
 				*(p_check_sum + 1), *(p_check_sum));
 
-	for (i = 4; i < bin->header_info[bin_num].bin_data_len +
-				bin->header_info[bin_num].header_len; i++) {
+	for (i = 4;
+	     i <
+	     bin->header_info[bin_num].bin_data_len +
+	     bin->header_info[bin_num].header_len; i++) {
 		sum_data += *(p_check_sum + i);
 	}
-	DBG("aw_bin_parse bin_num=%d, check_sum=0x%x, sum_data=0x%x\n",
-			bin_num, check_sum, sum_data);
+	DBG("aw_bin_parse bin_num=%d, check_sum = 0x%x, sum_data = 0x%x\n",
+		bin_num, check_sum, sum_data);
 	if (sum_data != check_sum) {
 		p_check_sum = NULL;
 		DBG_ERR("aw_bin_parse check sum or check bin data len error\n");
-		DBG_ERR("aw_bin_parse bin_num=%d, check_sum=0x%x, sum_data=0x%x\n", bin_num, check_sum, sum_data);
+		DBG_ERR("aw_bin_parse bin_num=%d, check_sum = 0x%x, sum_data = 0x%x\n", bin_num, check_sum, sum_data);
 		return -3;
 	}
 	p_check_sum = NULL;
@@ -139,29 +141,30 @@ int aw_check_register_num_v1(struct aw_bin *bin, int bin_num)
 
 	DBG("enter\n");
 
-	p_check_sum = &(bin->info.data[(bin->header_info[bin_num].valid_data_addr)]);
-	DBG("aw_bin_parse p_check_sum=%p\n", p_check_sum);
+	p_check_sum =
+	    &(bin->info.data[(bin->header_info[bin_num].valid_data_addr)]);
+	DBG("aw_bin_parse p_check_sum = %p\n", p_check_sum);
 	parse_register_num = GET_32_DATA(*(p_check_sum + 3),
-					*(p_check_sum + 2),
-					*(p_check_sum + 1), *(p_check_sum));
+					 *(p_check_sum + 2),
+					 *(p_check_sum + 1), *(p_check_sum));
 	check_register_num = (bin->header_info[bin_num].bin_data_len - 4) /
-		(bin->header_info[bin_num].reg_byte_len +
-		bin->header_info[bin_num].data_byte_len);
+	    (bin->header_info[bin_num].reg_byte_len +
+	     bin->header_info[bin_num].data_byte_len);
 	DBG
-		("aw_bin_parse bin_num=%d, parse_register_num=0x%x, check_register_num=0x%x\n",
-		bin_num, parse_register_num, check_register_num);
+	    ("aw_bin_parse bin_num=%d, parse_register_num = 0x%x, check_register_num = 0x%x\n",
+	     bin_num, parse_register_num, check_register_num);
 	if (parse_register_num != check_register_num) {
 		p_check_sum = NULL;
 		DBG_ERR("aw_bin_parse register num is error\n");
-		DBG_ERR("aw_bin_parse bin_num=%d, parse_register_num=0x%x, check_register_num=0x%x\n", bin_num, parse_register_num, check_register_num);
+		DBG_ERR("aw_bin_parse bin_num=%d, parse_register_num = 0x%x, check_register_num = 0x%x\n", bin_num, parse_register_num, check_register_num);
 		return -5;
 	}
 	bin->header_info[bin_num].reg_num = parse_register_num;
 	bin->header_info[bin_num].valid_data_len =
-		bin->header_info[bin_num].bin_data_len - 4;
+	    bin->header_info[bin_num].bin_data_len - 4;
 	p_check_sum = NULL;
 	bin->header_info[bin_num].valid_data_addr =
-		bin->header_info[bin_num].valid_data_addr + 4;
+	    bin->header_info[bin_num].valid_data_addr + 4;
 	return 0;
 }
 
@@ -174,35 +177,35 @@ int aw_check_dsp_reg_num_v1(struct aw_bin *bin, int bin_num)
 	DBG("enter\n");
 
 	p_check_sum =
-		&(bin->info.data[(bin->header_info[bin_num].valid_data_addr)]);
-	DBG("aw_bin_parse p_check_sum=%p\n", p_check_sum);
+	    &(bin->info.data[(bin->header_info[bin_num].valid_data_addr)]);
+	DBG("aw_bin_parse p_check_sum = %p\n", p_check_sum);
 	parse_dsp_reg_num = GET_32_DATA(*(p_check_sum + 7),
 					*(p_check_sum + 6),
 					*(p_check_sum + 5), *(p_check_sum + 4));
 	bin->header_info[bin_num].reg_data_byte_len =
-		GET_32_DATA(*(p_check_sum + 11), *(p_check_sum + 10),
+	    GET_32_DATA(*(p_check_sum + 11), *(p_check_sum + 10),
 			*(p_check_sum + 9), *(p_check_sum + 8));
 	check_dsp_reg_num =
-		(bin->header_info[bin_num].bin_data_len -
-		12) / bin->header_info[bin_num].reg_data_byte_len;
+	    (bin->header_info[bin_num].bin_data_len -
+	     12) / bin->header_info[bin_num].reg_data_byte_len;
 	DBG
-		("aw_bin_parse bin_num=%d, parse_dsp_reg_num=0x%x, check_dsp_reg_num=0x%x\n",
-		bin_num, parse_dsp_reg_num, check_dsp_reg_num);
+	    ("aw_bin_parse bin_num=%d, parse_dsp_reg_num = 0x%x, check_dsp_reg_num = 0x%x\n",
+	     bin_num, parse_dsp_reg_num, check_dsp_reg_num);
 	if (parse_dsp_reg_num != check_dsp_reg_num) {
 		p_check_sum = NULL;
 		DBG_ERR("aw_bin_parse dsp reg num is error\n");
-		DBG_ERR("aw_bin_parse bin_num=%d, parse_dsp_reg_num=0x%x, check_dsp_reg_num=0x%x\n", bin_num, parse_dsp_reg_num, check_dsp_reg_num);
+		DBG_ERR("aw_bin_parse bin_num=%d, parse_dsp_reg_num = 0x%x, check_dsp_reg_num = 0x%x\n", bin_num, parse_dsp_reg_num, check_dsp_reg_num);
 		return -6;
 	}
 	bin->header_info[bin_num].download_addr =
-		GET_32_DATA(*(p_check_sum + 3), *(p_check_sum + 2),
+	    GET_32_DATA(*(p_check_sum + 3), *(p_check_sum + 2),
 			*(p_check_sum + 1), *(p_check_sum));
 	bin->header_info[bin_num].reg_num = parse_dsp_reg_num;
 	bin->header_info[bin_num].valid_data_len =
-		bin->header_info[bin_num].bin_data_len - 12;
+	    bin->header_info[bin_num].bin_data_len - 12;
 	p_check_sum = NULL;
 	bin->header_info[bin_num].valid_data_addr =
-		bin->header_info[bin_num].valid_data_addr + 12;
+	    bin->header_info[bin_num].valid_data_addr + 12;
 	return 0;
 }
 
@@ -215,34 +218,34 @@ int aw_check_soc_app_num_v1(struct aw_bin *bin, int bin_num)
 	DBG("enter\n");
 
 	p_check_sum =
-		&(bin->info.data[(bin->header_info[bin_num].valid_data_addr)]);
-	DBG("aw_bin_parse p_check_sum=%p\n", p_check_sum);
+	    &(bin->info.data[(bin->header_info[bin_num].valid_data_addr)]);
+	DBG("aw_bin_parse p_check_sum = %p\n", p_check_sum);
 	bin->header_info[bin_num].app_version = GET_32_DATA(*(p_check_sum + 3),
-							*(p_check_sum + 2),
-							*(p_check_sum + 1),
-							*(p_check_sum));
+							    *(p_check_sum + 2),
+							    *(p_check_sum + 1),
+							    *(p_check_sum));
 	parse_soc_app_num = GET_32_DATA(*(p_check_sum + 11),
 					*(p_check_sum + 10),
 					*(p_check_sum + 9), *(p_check_sum + 8));
 	check_soc_app_num = bin->header_info[bin_num].bin_data_len - 12;
 	DBG
-		("aw_bin_parse bin_num=%d, parse_soc_app_num=0x%x, check_soc_app_num=0x%x\n",
-		bin_num, parse_soc_app_num, check_soc_app_num);
+	    ("aw_bin_parse bin_num=%d, parse_soc_app_num = 0x%x, check_soc_app_num = 0x%x\n",
+	     bin_num, parse_soc_app_num, check_soc_app_num);
 	if (parse_soc_app_num != check_soc_app_num) {
 		p_check_sum = NULL;
 		DBG_ERR("aw_bin_parse soc app num is error\n");
-		DBG_ERR("aw_bin_parse bin_num=%d, parse_soc_app_num=0x%x, check_soc_app_num=0x%x\n", bin_num, parse_soc_app_num, check_soc_app_num);
+		DBG_ERR("aw_bin_parse bin_num=%d, parse_soc_app_num = 0x%x, check_soc_app_num = 0x%x\n", bin_num, parse_soc_app_num, check_soc_app_num);
 		return -7;
 	}
 	bin->header_info[bin_num].reg_num = parse_soc_app_num;
 	bin->header_info[bin_num].download_addr =
-		GET_32_DATA(*(p_check_sum + 7), *(p_check_sum + 6),
+	    GET_32_DATA(*(p_check_sum + 7), *(p_check_sum + 6),
 			*(p_check_sum + 5), *(p_check_sum + 4));
 	bin->header_info[bin_num].valid_data_len =
-		bin->header_info[bin_num].bin_data_len - 12;
+	    bin->header_info[bin_num].bin_data_len - 12;
 	p_check_sum = NULL;
 	bin->header_info[bin_num].valid_data_addr =
-		bin->header_info[bin_num].valid_data_addr + 12;
+	    bin->header_info[bin_num].valid_data_addr + 12;
 	return 0;
 }
 
@@ -254,39 +257,38 @@ int aw_check_soc_app_num_v1(struct aw_bin *bin, int bin_num)
 void aw_get_single_bin_header_1_0_0(struct aw_bin *bin)
 {
 	int i;
-
 	DBG("enter %s\n", __func__);
 	bin->header_info[bin->all_bin_parse_num].header_len = 60;
 	bin->header_info[bin->all_bin_parse_num].check_sum =
-		GET_32_DATA(*(bin->p_addr + 3), *(bin->p_addr + 2),
+	    GET_32_DATA(*(bin->p_addr + 3), *(bin->p_addr + 2),
 			*(bin->p_addr + 1), *(bin->p_addr));
 	bin->header_info[bin->all_bin_parse_num].header_ver =
-		GET_32_DATA(*(bin->p_addr + 7), *(bin->p_addr + 6),
+	    GET_32_DATA(*(bin->p_addr + 7), *(bin->p_addr + 6),
 			*(bin->p_addr + 5), *(bin->p_addr + 4));
 	bin->header_info[bin->all_bin_parse_num].bin_data_type =
-		GET_32_DATA(*(bin->p_addr + 11), *(bin->p_addr + 10),
+	    GET_32_DATA(*(bin->p_addr + 11), *(bin->p_addr + 10),
 			*(bin->p_addr + 9), *(bin->p_addr + 8));
 	bin->header_info[bin->all_bin_parse_num].bin_data_ver =
-		GET_32_DATA(*(bin->p_addr + 15), *(bin->p_addr + 14),
+	    GET_32_DATA(*(bin->p_addr + 15), *(bin->p_addr + 14),
 			*(bin->p_addr + 13), *(bin->p_addr + 12));
 	bin->header_info[bin->all_bin_parse_num].bin_data_len =
-		GET_32_DATA(*(bin->p_addr + 19), *(bin->p_addr + 18),
+	    GET_32_DATA(*(bin->p_addr + 19), *(bin->p_addr + 18),
 			*(bin->p_addr + 17), *(bin->p_addr + 16));
 	bin->header_info[bin->all_bin_parse_num].ui_ver =
-		GET_32_DATA(*(bin->p_addr + 23), *(bin->p_addr + 22),
+	    GET_32_DATA(*(bin->p_addr + 23), *(bin->p_addr + 22),
 			*(bin->p_addr + 21), *(bin->p_addr + 20));
 	bin->header_info[bin->all_bin_parse_num].reg_byte_len =
-		GET_32_DATA(*(bin->p_addr + 35), *(bin->p_addr + 34),
+	    GET_32_DATA(*(bin->p_addr + 35), *(bin->p_addr + 34),
 			*(bin->p_addr + 33), *(bin->p_addr + 32));
 	bin->header_info[bin->all_bin_parse_num].data_byte_len =
-		GET_32_DATA(*(bin->p_addr + 39), *(bin->p_addr + 38),
+	    GET_32_DATA(*(bin->p_addr + 39), *(bin->p_addr + 38),
 			*(bin->p_addr + 37), *(bin->p_addr + 36));
 	bin->header_info[bin->all_bin_parse_num].device_addr =
-		GET_32_DATA(*(bin->p_addr + 43), *(bin->p_addr + 42),
+	    GET_32_DATA(*(bin->p_addr + 43), *(bin->p_addr + 42),
 			*(bin->p_addr + 41), *(bin->p_addr + 40));
 	for (i = 0; i < 8; i++) {
 		bin->header_info[bin->all_bin_parse_num].chip_type[i] =
-			*(bin->p_addr + 24 + i);
+		    *(bin->p_addr + 24 + i);
 	}
 	bin->header_info[bin->all_bin_parse_num].reg_num = 0x00000000;
 	bin->header_info[bin->all_bin_parse_num].reg_data_byte_len = 0x00000000;
@@ -302,25 +304,25 @@ int aw_parse_each_of_multi_bins_1_0_0(unsigned int bin_num, int bin_serial_num,
 	int ret = 0;
 	unsigned int bin_start_addr = 0;
 	unsigned int valid_data_len = 0;
-
 	DBG("aw_bin_parse enter multi bin branch -- %s\n", __func__);
 	if (!bin_serial_num) {
 		bin_start_addr = GET_32_DATA(*(bin->p_addr + 67),
-					*(bin->p_addr + 66),
-					*(bin->p_addr + 65),
-					*(bin->p_addr + 64));
+					     *(bin->p_addr + 66),
+					     *(bin->p_addr + 65),
+					     *(bin->p_addr + 64));
 		bin->p_addr += (60 + bin_start_addr);
 		bin->header_info[bin->all_bin_parse_num].valid_data_addr =
-			bin->header_info[bin->all_bin_parse_num - 1].valid_data_addr +
-			4 + 8 * bin_num + 60;
+		    bin->header_info[bin->all_bin_parse_num -
+				     1].valid_data_addr + 4 + 8 * bin_num + 60;
 	} else {
 		valid_data_len =
-			bin->header_info[bin->all_bin_parse_num - 1].bin_data_len;
+		    bin->header_info[bin->all_bin_parse_num - 1].bin_data_len;
 		bin->p_addr += (60 + valid_data_len);
 		bin->header_info[bin->all_bin_parse_num].valid_data_addr =
-			bin->header_info[bin->all_bin_parse_num - 1].valid_data_addr +
-			bin->header_info[bin->all_bin_parse_num - 1].bin_data_len +
-			60;
+		    bin->header_info[bin->all_bin_parse_num -
+				     1].valid_data_addr +
+		    bin->header_info[bin->all_bin_parse_num - 1].bin_data_len +
+		    60;
 	}
 
 	ret = aw_parse_bin_header_1_0_0(bin);
@@ -333,11 +335,10 @@ int aw_get_multi_bin_header_1_0_0(struct aw_bin *bin)
 	int i = 0;
 	int ret = 0;
 	unsigned int bin_num = 0;
-
 	DBG("aw_bin_parse enter multi bin branch -- %s\n", __func__);
 	bin_num = GET_32_DATA(*(bin->p_addr + 63),
-			*(bin->p_addr + 62),
-			*(bin->p_addr + 61), *(bin->p_addr + 60));
+			      *(bin->p_addr + 62),
+			      *(bin->p_addr + 61), *(bin->p_addr + 60));
 	if (bin->multi_bin_parse_num == 1) {
 		bin->header_info[bin->all_bin_parse_num].valid_data_addr = 60;
 	}
@@ -368,11 +369,10 @@ int aw_parse_bin_header_1_0_0(struct aw_bin *bin)
 {
 	int ret = 0;
 	unsigned int bin_data_type;
-
 	DBG("enter %s\n", __func__);
 	bin_data_type = GET_32_DATA(*(bin->p_addr + 11),
-				*(bin->p_addr + 10),
-				*(bin->p_addr + 9), *(bin->p_addr + 8));
+				    *(bin->p_addr + 10),
+				    *(bin->p_addr + 9), *(bin->p_addr + 8));
 	DBG("aw_bin_parse bin_data_type 0x%x\n", bin_data_type);
 	switch (bin_data_type) {
 	case DATA_TYPE_REGISTER:
@@ -386,7 +386,9 @@ int aw_parse_bin_header_1_0_0(struct aw_bin *bin)
 		DBG("%s bin->single_bin_parse_num is %d\n", __func__,
 			bin->single_bin_parse_num);
 		if (!bin->multi_bin_parse_num) {
-			bin->header_info[bin->all_bin_parse_num].valid_data_addr = 60;
+			bin->header_info[bin->
+					 all_bin_parse_num].valid_data_addr =
+			    60;
 		}
 		aw_get_single_bin_header_1_0_0(bin);
 		break;
@@ -415,8 +417,8 @@ static int aw_check_bin_header_version(struct aw_bin *bin)
 	unsigned int header_version = 0;
 
 	header_version = GET_32_DATA(*(bin->p_addr + 7),
-				*(bin->p_addr + 6),
-				*(bin->p_addr + 5), *(bin->p_addr + 4));
+				     *(bin->p_addr + 6),
+				     *(bin->p_addr + 5), *(bin->p_addr + 4));
 
 	DBG("aw_bin_parse header_version 0x%x\n", header_version);
 
@@ -427,7 +429,7 @@ static int aw_check_bin_header_version(struct aw_bin *bin)
 		ret = aw_parse_bin_header_1_0_0(bin);
 		return ret;
 	default:
-		DBG_ERR("aw_bin_parse Unrecognized this bin header version\n");
+		DBG_ERR("aw_bin_parse Unrecognized this bin header version \n");
 		return -1;
 	}
 }
@@ -442,7 +444,6 @@ int aw_parsing_bin_file(struct aw_bin *bin)
 		DBG_ERR("aw_bin_parse bin is NULL\n");
 		return -8;
 	}
-
 	bin->p_addr = bin->info.data;
 	bin->all_bin_parse_num = 0;
 	bin->multi_bin_parse_num = 0;
@@ -452,9 +453,9 @@ int aw_parsing_bin_file(struct aw_bin *bin)
 	ret = aw_check_bin_header_version(bin);
 	if (ret < 0) {
 		DBG_ERR("aw_bin_parse check bin header version error\n");
-		bin->p_addr = NULL;
 		return ret;
 	}
+	bin->p_addr = NULL;
 
 	/* check bin header info */
 	for (i = 0; i < bin->all_bin_parse_num; i++) {
@@ -473,28 +474,35 @@ int aw_parsing_bin_file(struct aw_bin *bin)
 		/* check valid data */
 		if (bin->header_info[i].bin_data_ver == DATA_VERSION_V1) {
 			/* check register num */
-			if (bin->header_info[i].bin_data_type == DATA_TYPE_REGISTER) {
+			if (bin->header_info[i].bin_data_type ==
+			    DATA_TYPE_REGISTER) {
 				ret = aw_check_register_num_v1(bin, i);
 				if (ret < 0) {
-					DBG_ERR("aw_bin_parse check register num error\n");
+					DBG_ERR
+					    ("aw_bin_parse check register num error\n");
 					return ret;
 				}
 				/* check dsp reg num */
-			} else if (bin->header_info[i].bin_data_type == DATA_TYPE_DSP_REG) {
+			} else if (bin->header_info[i].bin_data_type ==
+				   DATA_TYPE_DSP_REG) {
 				ret = aw_check_dsp_reg_num_v1(bin, i);
 				if (ret < 0) {
-					DBG_ERR("aw_bin_parse check dsp reg num error\n");
+					DBG_ERR
+					    ("aw_bin_parse check dsp reg num error\n");
 					return ret;
 				}
 				/* check soc app num */
-			} else if (bin->header_info[i].bin_data_type == DATA_TYPE_SOC_APP) {
+			} else if (bin->header_info[i].bin_data_type ==
+				   DATA_TYPE_SOC_APP) {
 				ret = aw_check_soc_app_num_v1(bin, i);
 				if (ret < 0) {
-					DBG_ERR("aw_bin_parse check soc app num error\n");
+					DBG_ERR
+					    ("aw_bin_parse check soc app num error\n");
 					return ret;
 				}
 			} else {
-				bin->header_info[i].valid_data_len = bin->header_info[i].bin_data_len;
+				bin->header_info[i].valid_data_len =
+				    bin->header_info[i].bin_data_len;
 			}
 		}
 	}

@@ -43,15 +43,14 @@ static char *aw_get_prof_name(int profile)
 /* lct_audio add begin */
 int aw_get_prof_index(char* profile)
 {
-	int index = 0;
-
-	for (index = 0; index < sizeof(g_profile_name) / sizeof(char*); index ++) {
-		if (0 == strncmp(profile, g_profile_name[index], AW_PROFILE_STR_MAX)) {
-			break;
-		}
-	}
-
-	return index;
+    int index = 0;
+    for(index = 0; index < sizeof(g_profile_name) / sizeof(char*); index ++) {
+	    if (0 == strncmp(profile, g_profile_name[index], AW_PROFILE_STR_MAX))
+            {
+                break;
+            }
+    }
+    return index;
 }
 EXPORT_SYMBOL(aw_get_prof_index);
 /* lct_audio add end */
@@ -62,6 +61,7 @@ EXPORT_SYMBOL(aw_get_prof_index);
  *
  *************************************************************************/
 static int aw_crc8_check(const unsigned char *data, unsigned int data_size)
+
 {
 	unsigned char crc_value = 0x00;
 	unsigned char *pdata;
@@ -208,11 +208,10 @@ static int aw_check_profile_id_v_0_0_0_1(struct device *dev, char *fw_data)
 
 	return 0;
 }
-
 static int aw_check_data_v_0_0_0_1(struct device *dev,
 			char *fw_data, size_t size)
 {
-	int ret = 0;
+	int ret = -1;
 
 	/* check file type id is awinic acf file */
 	ret = aw_check_file_id(dev, fw_data, AW_ACF_FILE_ID);
@@ -240,7 +239,7 @@ static int aw_check_data_v_0_0_0_1(struct device *dev,
 	if (ret < 0)
 		return ret;
 
-	AW_DEV_LOGD(dev, "acf fimware check succeed");
+	AW_DEV_LOGI(dev, "acf fimware check succeed");
 
 	return 0;
 }
@@ -324,7 +323,7 @@ static int aw_check_data_crc_v_1_0_0_0(struct device *dev, char *fw_data)
 static int aw_check_data_v_1_0_0_0(struct device *dev,
 			char *fw_data, size_t size)
 {
-	int ret = 0;
+	int ret = -1;
 
 	/* check file type id is awinic acf file */
 	ret = aw_check_file_id(dev, fw_data, AW_ACF_FILE_ID);
@@ -347,7 +346,7 @@ static int aw_check_data_v_1_0_0_0(struct device *dev,
 	if (ret < 0)
 		return ret;
 
-	AW_DEV_LOGD(dev, "acf fimware check succeed");
+	AW_DEV_LOGI(dev, "acf fimware check succeed");
 
 	return 0;
 }
@@ -358,11 +357,11 @@ static int aw_check_data_v_1_0_0_0(struct device *dev,
 static int aw_check_acf_firmware(struct device *dev,
 			char *fw_data, size_t size)
 {
-	int ret = 0;
+	int ret = -1;
 	struct aw_acf_hdr *acf_hdr = NULL;
 
 	if (fw_data == NULL) {
-		AW_DEV_LOGE(dev, "fw_data is NULL, fw_data check failed");
+		AW_DEV_LOGE(dev, "fw_data is NULL,fw_data check failed");
 		return -ENODATA;
 	}
 
@@ -387,6 +386,8 @@ static int aw_check_acf_firmware(struct device *dev,
 	return ret;
 }
 
+
+
 /*************************************************************************
  *
  *acf parse
@@ -409,7 +410,7 @@ static int aw_parse_reg_with_hdr(struct device *dev, uint8_t *data,
 			 uint32_t data_len, struct aw_prof_desc *prof_desc)
 {
 	struct aw_bin *aw_bin = NULL;
-	int ret = 0;
+	int ret = -1;
 
 	AW_DEV_LOGD(dev, "data_size:%d enter", data_len);
 
@@ -439,6 +440,11 @@ static int aw_parse_reg_with_hdr(struct device *dev, uint8_t *data,
 	prof_desc->data_container.len = aw_bin->header_info[0].valid_data_len;
 	prof_desc->prof_st = AW_PROFILE_OK;
 
+	kfree(aw_bin);
+	aw_bin = NULL;
+
+	return 0;
+
 parse_bin_failed:
 	kfree(aw_bin);
 	aw_bin = NULL;
@@ -448,7 +454,7 @@ parse_bin_failed:
 static int aw_parse_monitor_config(struct device *dev,
 				char *monitor_data, uint32_t data_len)
 {
-	int ret = 0;
+	int ret = -1;
 
 	if (monitor_data == NULL || data_len == 0) {
 		AW_DEV_LOGE(dev, "no data to parse");
@@ -461,7 +467,7 @@ static int aw_parse_monitor_config(struct device *dev,
 		return ret;
 	}
 
-	AW_DEV_LOGD(dev, "monitor_bin parse succeed");
+	AW_DEV_LOGI(dev, "monitor_bin parse succeed");
 
 	return 0;
 }
@@ -490,7 +496,8 @@ static int aw_check_product_name_v_0_0_0_1(struct device *dev,
 
 	for (i = 0; i < acf_info->product_cnt; i++) {
 		if (0 == strcmp(acf_info->product_tab[i], prof_hdr->dev_name)) {
-			AW_DEV_LOGD(dev, "bin_dev_name:%s", prof_hdr->dev_name);
+			AW_DEV_LOGD(dev, "bin_dev_name:%s",
+				prof_hdr->dev_name);
 			return 0;
 		}
 	}
@@ -514,7 +521,7 @@ static int aw_parse_data_by_sec_type_v_0_0_0_1(struct device *dev,
 				struct aw_acf_dde *prof_hdr,
 				struct aw_prof_desc *profile_prof_desc)
 {
-	int ret = 0;
+	int ret = -1;
 	char *cfg_data = acf_info->fw_data + prof_hdr->data_offset;
 
 	switch (prof_hdr->data_type) {
@@ -524,7 +531,7 @@ static int aw_parse_data_by_sec_type_v_0_0_0_1(struct device *dev,
 		profile_prof_desc->prof_name = aw_get_prof_name(prof_hdr->dev_profile);
 		AW_DEV_LOGD(dev, "parse reg type data enter,profile=%s",
 			aw_get_prof_name(prof_hdr->dev_profile));
-		ret = aw_parse_raw_reg(dev, cfg_data, prof_hdr->data_size,
+		ret =  aw_parse_raw_reg(dev, cfg_data, prof_hdr->data_size,
 					profile_prof_desc);
 		break;
 	case AW_BIN_TYPE_HDR_REG:
@@ -551,7 +558,7 @@ static int aw_parse_dev_type_v_0_0_0_1(struct device *dev,
 		struct acf_bin_info *acf_info, struct aw_all_prof_info *all_prof_info)
 {
 	int i = 0;
-	int ret = 0;
+	int ret = -1;
 	int sec_num = 0;
 	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
 	struct aw_prof_desc *prof_desc = NULL;
@@ -604,7 +611,7 @@ static int aw_parse_default_type_v_0_0_0_1(struct device *dev,
 	struct acf_bin_info *acf_info, struct aw_all_prof_info *all_prof_info)
 {
 	int i = 0;
-	int ret = 0;
+	int ret = -1;
 	int sec_num = 0;
 	uint8_t soft_off_enable = acf_info->aw_dev->soft_off_enable;
 	struct aw_prof_desc *prof_desc = NULL;
@@ -678,7 +685,7 @@ static int aw_get_prof_count_v_0_0_0_1(struct device *dev,
 		}
 	}
 
-	AW_DEV_LOGD(dev, "get profile count=[%d]", prof_count);
+	AW_DEV_LOGI(dev, "get profile count=[%d]", prof_count);
 	return prof_count;
 }
 
@@ -692,14 +699,14 @@ static int aw_set_prof_off_info_v_0_0_0_1(struct device *dev,
 	struct aw_prof_info *prof_info = &acf_info->prof_info;
 
 	if (index >= prof_info->count) {
-		AW_DEV_LOGE(dev, "index[%d] is out of table, profile count[%d]",
+		AW_DEV_LOGE(dev, "index[%d] is out of table,profile count[%d]",
 			index, prof_info->count);
 		return -EINVAL;
 	}
 
 	if (soft_off_enable && prof_desc[AW_PROFILE_OFF].prof_st == AW_PROFILE_OK) {
 		prof_info->prof_desc[index] = prof_desc[AW_PROFILE_OFF];
-		AW_DEV_LOGD(dev, "product=[%s]----profile=[%s]",
+		AW_DEV_LOGI(dev, "product=[%s]----profile=[%s]",
 			prof_info->prof_desc[index].dev_name,
 			aw_get_prof_name(AW_PROFILE_OFF));
 	} else if (!soft_off_enable) {
@@ -707,7 +714,7 @@ static int aw_set_prof_off_info_v_0_0_0_1(struct device *dev,
 			sizeof(struct aw_data_container));
 		prof_info->prof_desc[index].prof_st = AW_PROFILE_WAIT;
 		prof_info->prof_desc[index].prof_name = aw_get_prof_name(AW_PROFILE_OFF);
-		AW_DEV_LOGD(dev, "set default power_off with no data to profile");
+		AW_DEV_LOGI(dev, "set default power_off with no data to profile");
 	} else {
 		AW_DEV_LOGE(dev, "not init default power_off config");
 		return -EINVAL;
@@ -715,6 +722,7 @@ static int aw_set_prof_off_info_v_0_0_0_1(struct device *dev,
 
 	return 0;
 }
+
 
 static int aw_get_vaild_prof_v_0_0_0_1(struct device *dev,
 				struct acf_bin_info *acf_info,
@@ -747,7 +755,7 @@ static int aw_get_vaild_prof_v_0_0_0_1(struct device *dev,
 				return -ENOMEM;
 			}
 			prof_info->prof_desc[index] = prof_desc[i];
-			AW_DEV_LOGD(dev, "product=[%s]----profile=[%s]",
+			AW_DEV_LOGI(dev, "product=[%s]----profile=[%s]",
 				prof_info->prof_desc[index].dev_name,
 				aw_get_prof_name(i));
 			index++;
@@ -779,7 +787,7 @@ static int aw_set_prof_name_list_v_0_0_0_1(struct device *dev,
 	for (i = 0; i < count; ++i) {
 		snprintf(prof_info->prof_name_list[i], AW_PROFILE_STR_MAX, "%s",
 			prof_info->prof_desc[i].prof_name);
-		AW_DEV_LOGD(dev, "index=[%d], profile_name=[%s]",
+		AW_DEV_LOGI(dev, "index=[%d], profile_name=[%s]",
 				i, prof_info->prof_name_list[i]);
 	}
 
@@ -811,7 +819,7 @@ static int aw_parse_acf_v_0_0_0_1(struct device *dev,
 	ret = aw_get_vaild_prof_v_0_0_0_1(dev, acf_info, &all_prof_info);
 	if (ret < 0) {
 		aw_acf_profile_free(dev, acf_info);
-		AW_DEV_LOGE(dev, "hdr_cersion[0x%x] parse failed",
+		AW_DEV_LOGE(dev,  "hdr_cersion[0x%x] parse failed",
 					acf_info->acf_hdr.hdr_version);
 		return ret;
 	}
@@ -819,12 +827,12 @@ static int aw_parse_acf_v_0_0_0_1(struct device *dev,
 	ret = aw_set_prof_name_list_v_0_0_0_1(dev, acf_info);
 	if (ret < 0) {
 		aw_acf_profile_free(dev, acf_info);
-		AW_DEV_LOGE(dev, "creat prof_id_and_name_list failed");
+		AW_DEV_LOGE(dev,  "creat prof_id_and_name_list failed");
 		return ret;
 	}
 
 	acf_info->prof_info.status = AW_ACF_UPDATE;
-	AW_DEV_LOGD(dev, "acf parse success");
+	AW_DEV_LOGI(dev, "acf parse success");
 	return 0;
 }
 
@@ -839,7 +847,7 @@ static int aw_check_product_name_v_1_0_0_0(struct device *dev,
 
 	for (i = 0; i < acf_info->product_cnt; i++) {
 		if (0 == strcmp(acf_info->product_tab[i], prof_hdr->dev_name)) {
-			AW_DEV_LOGD(dev, "bin_dev_name: %s", prof_hdr->dev_name);
+			AW_DEV_LOGI(dev, "bin_dev_name:%s", prof_hdr->dev_name);
 			return 0;
 		}
 	}
@@ -852,7 +860,7 @@ static void aw_print_prof_off_name_can_support_v_1_0_0_0(struct device *dev)
 	int i = 0;
 
 	for (i = 0; i < AW_POWER_OFF_NAME_SUPPORT_COUNT; i++)
-		AW_DEV_LOGD(dev, "support prof_off_name have string:[%s]", g_power_off_name[i]);
+		AW_DEV_LOGI(dev, "support prof_off_name have string:[%s]", g_power_off_name[i]);
 }
 
 static int aw_get_dde_type_info_v_1_0_0_0(struct device *dev,
@@ -886,6 +894,7 @@ static int aw_get_dde_type_info_v_1_0_0_0(struct device *dev,
 
 	return 0;
 }
+
 
 static int aw_parse_get_dev_type_prof_count_v_1_0_0_0(struct device *dev,
 						struct acf_bin_info *acf_info)
@@ -931,7 +940,7 @@ static int aw_parse_get_dev_type_prof_count_v_1_0_0_0(struct device *dev,
 	}
 
 	if (!found_off_prof_flag && soft_off_enable) {
-		AW_DEV_LOGE(dev, "profile power off is necessary, but not found");
+		AW_DEV_LOGE(dev, "profile power off is necessary,but not found");
 		aw_print_prof_off_name_can_support_v_1_0_0_0(dev);
 		return -EINVAL;
 	}
@@ -942,7 +951,7 @@ static int aw_parse_get_dev_type_prof_count_v_1_0_0_0(struct device *dev,
 	}
 
 	acf_info->prof_info.count = count;
-	AW_DEV_LOGD(dev, "profile dev_type profile count is %d", acf_info->prof_info.count);
+	AW_DEV_LOGI(dev, "profile dev_type profile count is %d", acf_info->prof_info.count);
 	return 0;
 }
 
@@ -989,7 +998,7 @@ static int aw_parse_get_default_type_prof_count_v_1_0_0_0(struct device *dev,
 	}
 
 	if (!found_off_prof_flag && soft_off_enable) {
-		AW_DEV_LOGE(dev, "profile power off is necessary, but not found");
+		AW_DEV_LOGE(dev, "profile power off is necessary,but not found");
 		aw_print_prof_off_name_can_support_v_1_0_0_0(dev);
 		return -EINVAL;
 	}
@@ -1000,7 +1009,7 @@ static int aw_parse_get_default_type_prof_count_v_1_0_0_0(struct device *dev,
 	}
 
 	acf_info->prof_info.count = count;
-	AW_DEV_LOGD(dev, "profile default_type profile count is %d", acf_info->prof_info.count);
+	AW_DEV_LOGI(dev, "profile default_type profile count is %d", acf_info->prof_info.count);
 	return 0;
 }
 
@@ -1031,7 +1040,7 @@ static int aw_parse_get_profile_count_v_1_0_0_0(struct device *dev,
 		return -EINVAL;
 	}
 
-	AW_DEV_LOGD(dev, "profile count is %d", acf_info->prof_info.count);
+	AW_DEV_LOGI(dev, "profile count is %d", acf_info->prof_info.count);
 	return 0;
 }
 
@@ -1051,7 +1060,7 @@ static int aw_parse_dev_type_prof_name_v_1_0_0_0(struct device *dev,
 		(acf_info->aw_dev->i2c_addr == acf_dde[i].dev_addr) &&
 		(acf_info->aw_dev->chipid == acf_dde[i].chip_id)) {
 			if (list_index > prof_info->count) {
-				AW_DEV_LOGE(dev, "%s:Alrealdy set list_index [%d], redundant profile [%s] exist\n",
+				AW_DEV_LOGE(dev, "%s:Alrealdy set list_index [%d], redundant profile [%s]exist\n",
 					__func__, list_index,
 					acf_dde[i].dev_profile_str);
 				return -EINVAL;
@@ -1063,7 +1072,7 @@ static int aw_parse_dev_type_prof_name_v_1_0_0_0(struct device *dev,
 
 			snprintf(prof_info->prof_name_list[list_index], AW_PROFILE_STR_MAX, "%s",
 				acf_dde[i].dev_profile_str);
-			AW_DEV_LOGD(dev, "profile_name=[%s]",
+			AW_DEV_LOGI(dev, "profile_name=[%s]",
 					prof_info->prof_name_list[list_index]);
 			list_index++;
 		}
@@ -1087,7 +1096,7 @@ static int aw_parse_default_type_prof_name_v_1_0_0_0(struct device *dev,
 		(acf_info->dev_index == acf_dde[i].dev_index) &&
 		(acf_info->aw_dev->chipid == acf_dde[i].chip_id)) {
 			if (list_index > prof_info->count) {
-				AW_DEV_LOGE(dev, "%s:Alrealdy set list_index [%d], redundant profile [%s] exist\n",
+				AW_DEV_LOGE(dev, "%s:Alrealdy set list_index [%d], redundant profile [%s]exist\n",
 					__func__, list_index,
 					acf_dde[i].dev_profile_str);
 				return -EINVAL;
@@ -1099,7 +1108,7 @@ static int aw_parse_default_type_prof_name_v_1_0_0_0(struct device *dev,
 
 			snprintf(prof_info->prof_name_list[list_index], AW_PROFILE_STR_MAX, "%s",
 				acf_dde[i].dev_profile_str);
-			AW_DEV_LOGD(dev, "profile_name=[%s]",
+			AW_DEV_LOGI(dev, "profile_name=[%s]",
 					prof_info->prof_name_list[list_index]);
 			list_index++;
 		}
@@ -1140,9 +1149,10 @@ static int aw_parse_prof_name_v_1_0_0_0(struct device *dev,
 		return -EINVAL;
 	}
 
-	AW_DEV_LOGD(dev, "profile name parse succeed");
+	AW_DEV_LOGI(dev, "profile name parse succeed");
 	return 0;
 }
+
 
 static int aw_search_prof_index_from_list_v_1_0_0_0(struct device *dev,
 				struct acf_bin_info *acf_info,
@@ -1170,7 +1180,7 @@ static int aw_parse_data_by_sec_type_v_1_0_0_0(struct device *dev,
 				struct acf_bin_info *acf_info,
 				struct aw_acf_dde_v_1_0_0_0 *prof_hdr)
 {
-	int ret = 0;
+	int ret = -1;
 	char *cfg_data = acf_info->fw_data + prof_hdr->data_offset;
 	struct aw_prof_desc *prof_desc = NULL;
 
@@ -1182,17 +1192,17 @@ static int aw_parse_data_by_sec_type_v_1_0_0_0(struct device *dev,
 	case AW_BIN_TYPE_REG:
 		snprintf(prof_desc->dev_name, sizeof(prof_hdr->dev_name),
 			"%s", prof_hdr->dev_name);
-		AW_DEV_LOGD(dev, "parse reg type data enter, product=[%s],prof_id=[%d],prof_name=[%s]",
+		AW_DEV_LOGI(dev, "parse reg type data enter,product=[%s],prof_id=[%d],prof_name=[%s]",
 			prof_hdr->dev_name, prof_hdr->dev_profile,
 			prof_hdr->dev_profile_str);
 		prof_desc->prof_name = prof_hdr->dev_profile_str;
-		ret = aw_parse_raw_reg(dev, cfg_data, prof_hdr->data_size,
+		ret =  aw_parse_raw_reg(dev, cfg_data, prof_hdr->data_size,
 					prof_desc);
 		break;
 	case AW_BIN_TYPE_HDR_REG:
 		snprintf(prof_desc->dev_name, sizeof(prof_hdr->dev_name),
 			"%s", prof_hdr->dev_name);
-		AW_DEV_LOGD(dev, "parse hdr_reg type data enter, product=[%s],prof_id=[%d],prof_name=[%s]",
+		AW_DEV_LOGI(dev, "parse hdr_reg type data enter,product=[%s],prof_id=[%d],prof_name=[%s]",
 			prof_hdr->dev_name, prof_hdr->dev_profile,
 			prof_hdr->dev_profile_str);
 		prof_desc->prof_name = prof_hdr->dev_profile_str;
@@ -1286,7 +1296,7 @@ static int aw_parse_default_type_v_1_0_0_0(struct device *dev,
 	}
 
 	if (parse_prof_count == 0) {
-		AW_DEV_LOGE(dev, "get default type num is %d, parse failed", parse_prof_count);
+		AW_DEV_LOGE(dev, "get default type num is %d,parse failed", parse_prof_count);
 		return -EINVAL;
 	}
 
@@ -1332,13 +1342,13 @@ static int aw_set_prof_off_info_v_1_0_0_0(struct device *dev,
 
 		ret = aw_check_prof_str_is_off(prof_info->prof_name_list[i]);
 		if (ret == 0) {
-			AW_DEV_LOGD(dev, "found profile off, data_len=[%d]",
+			AW_DEV_LOGD(dev, "found profile off,data_len=[%d]",
 				prof_info->prof_desc[i].data_container.len);
 			return 0;
 		}
 	}
 
-	AW_DEV_LOGE(dev, "index[%d] is out of table, profile count[%d]",
+	AW_DEV_LOGE(dev, "index[%d] is out of table,profile count[%d]",
 		i, prof_info->count);
 	return -EINVAL;
 }
@@ -1382,9 +1392,10 @@ static int aw_parse_acf_v_1_0_0_0(struct device *dev,
 	}
 
 	prof_info->status = AW_ACF_UPDATE;
-	AW_DEV_LOGD(dev, "acf paese succeed");
+	AW_DEV_LOGI(dev, "acf paese succeed");
 	return 0;
 }
+
 
 /*************************************************************************
  *
@@ -1410,7 +1421,7 @@ void aw_acf_profile_free(struct device *dev, struct acf_bin_info *acf_info)
 	}
 
 	if (acf_info->fw_data) {
-		kvfree(acf_info->fw_data);
+		vfree(acf_info->fw_data);
 		acf_info->fw_data = NULL;
 	}
 }
@@ -1472,7 +1483,7 @@ struct aw_prof_desc *aw_acf_get_prof_desc_form_name(struct device *dev,
 		return NULL;
 	}
 
-	AW_DEV_LOGD(dev, "get prof desc down");
+	AW_DEV_LOGI(dev, "get prof desc down");
 	return prof_desc;
 }
 
@@ -1508,13 +1519,14 @@ char *aw_acf_get_prof_name_form_index(struct device *dev,
 		return NULL;
 	}
 
-	if (index >= prof_info->count || index < 0) {
+	if (index >= prof_info->count  || index < 0) {
 		AW_DEV_LOGE(dev, "profile_index out of table");
 		return NULL;
 	}
 
 	return prof_info->prof_desc[index].prof_name;
 }
+
 
 int aw_acf_get_profile_count(struct device *dev,
 			struct acf_bin_info *acf_info)
@@ -1546,7 +1558,7 @@ char *aw_acf_get_prof_off_name(struct device *dev,
 	}
 
 	for (i = 0; i < prof_info->count; i++) {
-		ret = aw_check_prof_str_is_off(prof_info->prof_name_list[i]);
+		ret  = aw_check_prof_str_is_off(prof_info->prof_name_list[i]);
 		if (ret == 0)
 			return prof_info->prof_name_list[i];
 	}
@@ -1567,3 +1579,4 @@ void aw_acf_init(struct aw_device *aw_dev, struct acf_bin_info *acf_info, int in
 	acf_info->fw_data = NULL;
 	acf_info->fw_size = 0;
 }
+

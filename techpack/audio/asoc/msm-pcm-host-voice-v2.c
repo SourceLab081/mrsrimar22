@@ -1033,7 +1033,7 @@ static int msm_pcm_close(struct snd_pcm_substream *substream)
 		pr_err("%s, dai_data is NULL\n", __func__);
 
 		ret = -EINVAL;
-		return ret;
+		goto done;
 	}
 
 	wake_up(&dai_data->queue_wait);
