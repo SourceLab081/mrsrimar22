@@ -3716,8 +3716,9 @@ struct dsi_panel *dsi_panel_get(struct device *parent,
 
 	#ifdef CONFIG_TARGET_PROJECT_C3Q
 	else {
-		  //Because node in nvt_ts failed to count>0 
-        	  lcd_active_panel = &panel->drm_panel;
+			//Because node in nvt_ts failed to count>0 
+        	nvt_active_panel = &panel->drm_panel;
+            fts_active_panel = &panel->drm_panel;  
 	}
 	#endif
 

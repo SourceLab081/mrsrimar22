@@ -369,7 +369,8 @@ void dsi_panel_set_backlight_control(struct dsi_panel *panel, struct dsi_display
 
 #ifdef CONFIG_TARGET_PROJECT_C3Q
 int dsi_panel_apply_cabc_mode(struct dsi_panel *panel);
-extern struct drm_panel *lcd_active_panel;
+extern struct drm_panel *nvt_active_panel;
+extern struct drm_panel *fts_active_panel;
 #endif
 
 #endif /* _DSI_PANEL_H_ */

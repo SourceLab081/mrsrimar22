@@ -70,6 +70,8 @@ extern touchscreen_usb_plugin_data_t g_touchscreen_usb_pulgin;
 * Global variable or extern global variabls/functions
 *****************************************************************************/
 struct fts_ts_data *fts_data;
+static DEFINE_MUTEX(fts_panel_lock);
+struct drm_panel *fts_active_panel;
 extern void set_fts_ts_variant(bool en);
 static bool delay_gesture = false;
 extern void set_lcd_reset_gpio_keep_high(bool en);
@@ -1334,48 +1336,133 @@ static void fts_suspend_work(struct work_struct *work)
     fts_ts_suspend(ts_data->dev);
 }
 
-static int drm_notifier_callback(struct notifier_block *self,
-                                 unsigned long event, void *data)
+static int fts_check_dt(struct device_node *np)
 {
-    struct drm_notify_data *evdata = data;
-    int *blank = NULL;
-    
-    if (!evdata) {
-        FTS_ERROR("evdata is null");
-        return 0;
-    }
+	int i, count;
+	struct device_node *node = NULL;
+	struct drm_panel *panel = NULL;
 
-    if (!((event == DRM_EARLY_EVENT_BLANK )
-          || (event == DRM_EVENT_BLANK))) {
-        FTS_DEBUG("event(%lu) do not need process\n", event);
-        return 0;
-    }
+	count = of_count_phandle_with_args(np, "panel", NULL);
+	if (count <= 0) {
 
-    blank = evdata->data;
-    FTS_DEBUG("DRM event:%lu,blank:%d", event, *blank);
-    switch (*blank) {
-    case DRM_BLANK_UNBLANK:
-        if (DRM_EARLY_EVENT_BLANK == event) {
-            FTS_DEBUG("resume: event = %lu, not care\n", event);
-        } else if (DRM_EVENT_BLANK == event) {
-            queue_work(fts_data->ts_workqueue, &fts_data->resume_work);
-        }
-        break;
-    case DRM_BLANK_POWERDOWN:
-        if (DRM_EARLY_EVENT_BLANK == event) {
-            queue_work(fts_data->ts_workqueue,
-                    &fts_data->suspend_work);
-        } else if (DRM_EVENT_BLANK == event) {
-            FTS_DEBUG("suspend: event = %lu, not care\n", event);
-        }
-        break;
-    default:
-        FTS_DEBUG("DRM BLANK(%d) do not need process\n", *blank);
-        break;
-    }
+		return 0;
+	}
 
-    return 0;
+	for (i = 0; i < count; i++) {
+		node = of_parse_phandle(np, "panel", i);
+
+		panel = of_drm_find_panel(node);
+		of_node_put(node);
+		node = NULL;
+
+		if (!IS_ERR(panel)) {
+			mutex_lock(&fts_panel_lock);
+			fts_active_panel = panel;
+			mutex_unlock(&fts_panel_lock);
+                } 
+		return 0;
+	}
+
+	//FTS_ERROR("no find drm_panel");
+	return PTR_ERR(panel);
 }
+
+static int fts_check_default_tp(struct device_node *dt, const char *prop)
+{
+	const char **active_tp = NULL;
+	int count, tmp, score = 0;
+	const char *active;
+	int ret, i;
+
+	count = of_property_count_strings(dt->parent, prop);
+	if (count <= 0 || count > 3)
+		return -ENODEV;
+
+	active_tp = kcalloc(count, sizeof(char *), GFP_KERNEL);
+	if (!active_tp) {
+		FTS_ERROR("FTS alloc failed");
+		return -ENOMEM;
+	}
+
+	ret = of_property_read_string_array(dt->parent, prop,
+			active_tp, count);
+	if (ret < 0) {
+		FTS_ERROR("fail to read %s %d", prop, ret);
+		ret = -ENODEV;
+		goto out;
+	}
+
+	for (i = 0; i < count; i++) {
+		active = active_tp[i];
+		if (active != NULL) {
+			tmp = of_device_is_compatible(dt, active);
+			if (tmp > 0)
+				score++;
+		}
+	}
+
+	if (score <= 0) {
+		FTS_INFO("not match this driver");
+		ret = -ENODEV;
+		goto out;
+	}
+	ret = 0;
+out:
+	kfree_safe(active_tp);
+	return ret;
+}
+
+static int drm_notifier_callback(struct notifier_block *self,
+				 unsigned long event, void *data)
+{
+	struct drm_panel_notifier *evdata = data;
+	int *blank = NULL;
+
+ 	if (!fts_data) {
+		FTS_ERROR("ft_data is null");
+		return 0;
+	}
+
+	if (!evdata) {
+        	FTS_ERROR("evdata is null");
+        	return 0;
+    	}	
+
+	if (!(event == DRM_PANEL_EARLY_EVENT_BLANK ||
+		event == DRM_PANEL_EVENT_BLANK)) {
+		FTS_DEBUG("event(%lu) not need to process\n", event);
+		return 0;
+	}
+
+	blank = evdata->data;
+	FTS_DEBUG("DRM EVENT_BLANK received, blank: %d", *blank);
+
+	switch (*blank) {
+	case DRM_PANEL_BLANK_UNBLANK:
+		if (DRM_PANEL_EARLY_EVENT_BLANK == event) {
+	            	FTS_DEBUG("resume: event = %lu, not care\n", event);
+        	} else if (DRM_PANEL_EVENT_BLANK == event) {
+            		queue_work(fts_data->ts_workqueue, &fts_data->resume_work);
+        	}		
+		break;
+	case DRM_PANEL_BLANK_POWERDOWN:
+	case DRM_PANEL_BLANK_LP1:
+	case DRM_PANEL_BLANK_LP2:
+		if (DRM_PANEL_EARLY_EVENT_BLANK == event) {
+	            queue_work(fts_data->ts_workqueue, &fts_data->suspend_work);
+        	} else if (DRM_PANEL_EVENT_BLANK == event) {
+		    FTS_DEBUG("suspend: event = %lu, not care\n", event);
+        	}		
+		break;
+	default:
+		FTS_DEBUG("DRM BLANK(%d) do not need process\n", *blank);
+		break;
+	}
+
+	return 0;
+}
+
+
 static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
 {
     int ret = 0;
@@ -1393,6 +1480,17 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
         ret = fts_parse_dt(ts_data->dev, ts_data->pdata);
         if (ret)
             FTS_ERROR("device-tree parse fail");
+        
+        /*if (fts_check_dt(ts_data->dev->of_node)) {
+			if (!fts_check_default_tp(ts_data->dev->of_node, "qcom,spi-touch-active"))
+				ret = -EPROBE_DEFER;
+			else
+				ret = -ENODEV;
+			goto err_pdata;
+	}*/
+	if (fts_check_dt(ts_data->dev->of_node)) {
+		FTS_DEBUG("Fts check dt success");
+	}
 
     } else {
         if (ts_data->dev->platform_data) {
@@ -1403,10 +1501,29 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
         }
     }
 
+    /*
     ts_data->ts_workqueue = create_singlethread_workqueue("fts_wq");
     if (!ts_data->ts_workqueue) {
         FTS_ERROR("create fts workqueue fail");
     }
+    */ 
+/* WQ Interface handler */
+	ts_data->ts_workqueue = alloc_workqueue("fts_wq", WQ_MEM_RECLAIM, 1);
+	if (!ts_data->ts_workqueue) {
+		FTS_ERROR("create fts workqueue fail");
+		ret = -ENOMEM;
+		goto err_gpio_config;
+	}
+
+	/* WQ PM interface handler */
+	INIT_WORK(&ts_data->resume_work, fts_resume_work);
+	INIT_WORK(&ts_data->suspend_work, fts_suspend_work);
+	ts_data->pm_workqueue = alloc_workqueue("fts_pm_wq", WQ_MEM_RECLAIM, 1);
+	if (!ts_data->pm_workqueue) {
+		FTS_ERROR("create fts pm workqueue fail");
+		ret = -ENOMEM;
+		goto err_wq_init;
+	}
 
     spin_lock_init(&ts_data->irq_lock);
     mutex_init(&ts_data->report_mutex);
@@ -1518,14 +1635,28 @@ static int fts_ts_probe_entry(struct fts_ts_data *ts_data)
         INIT_WORK(&ts_data->suspend_work, fts_suspend_work);
     }
 
+/* notifier */
+    ts_data->drm_notif.notifier_call = drm_notifier_callback;
+    mutex_lock(&fts_panel_lock);
+    if (fts_active_panel) {
+		ret = drm_panel_notifier_register(fts_active_panel, &ts_data->drm_notif);
+		if (ret < 0) {
+			mutex_unlock(&fts_panel_lock);
+			FTS_ERROR("register notifier failed");
+			goto err_fwupg_init;
+		}
+		FTS_INFO("register notifier success");
+     } else {
+		FTS_INFO("no fts_active_panel registered at probe time");
+     }
+     mutex_unlock(&fts_panel_lock);
+
 #if defined(CONFIG_PM) && FTS_PATCH_COMERR_PM
     init_completion(&ts_data->pm_completion);
     ts_data->pm_suspend = false;
 #endif
 	pm_runtime_enable(ts_data->dev);
 
-    ts_data->drm_notif.notifier_call = drm_notifier_callback;
-    ret = drm_register_client(&ts_data->drm_notif);
     if (ret) {
         FTS_ERROR("Unable to register drm_notifier: %d\n", ret);
     }
@@ -1554,11 +1685,25 @@ err_irq_req:
 #if FTS_POWER_SOURCE_CUST_EN
 err_power_init:
     fts_power_source_exit(ts_data);
+err_pm_wq_init:
 #endif
+	if (ts_data->pm_workqueue) {
+		cancel_work_sync(&ts_data->resume_work);
+		cancel_work_sync(&ts_data->suspend_work);
+		flush_workqueue(ts_data->pm_workqueue);
+		destroy_workqueue(ts_data->pm_workqueue);
+	}
     if (gpio_is_valid(ts_data->pdata->reset_gpio))
         gpio_free(ts_data->pdata->reset_gpio);
     if (gpio_is_valid(ts_data->pdata->irq_gpio))
         gpio_free(ts_data->pdata->irq_gpio);
+err_wq_init:
+	if (ts_data->ts_workqueue) {
+		flush_workqueue(ts_data->ts_workqueue);
+		destroy_workqueue(ts_data->ts_workqueue);
+	}
+err_fwupg_init:
+	fts_fwupg_exit(ts_data);
 err_gpio_config:
     kfree_safe(ts_data->point_buf);
     kfree_safe(ts_data->events);
@@ -1567,6 +1712,8 @@ err_report_buffer:
 err_input_init:
     if (ts_data->ts_workqueue)
         destroy_workqueue(ts_data->ts_workqueue);
+err_pdata:
+	kfree_safe(ts_data->pdata);    
 err_bus_init:
     kfree_safe(ts_data->bus_tx_buf);
     kfree_safe(ts_data->bus_rx_buf);
@@ -1611,8 +1758,11 @@ static int fts_ts_remove_entry(struct fts_ts_data *ts_data)
     if (ts_data->ts_workqueue)
         destroy_workqueue(ts_data->ts_workqueue);
 
-    if (drm_unregister_client(&ts_data->drm_notif))
-        FTS_ERROR("Error occurred while unregistering drm_notifier.\n");
+    mutex_lock(&fts_panel_lock);
+    if (fts_active_panel)
+	drm_panel_notifier_unregister(fts_active_panel, &ts_data->drm_notif);
+    mutex_unlock(&fts_panel_lock);
+    fts_fwupg_exit(ts_data);
 
     if (gpio_is_valid(ts_data->pdata->reset_gpio))
         gpio_free(ts_data->pdata->reset_gpio);
