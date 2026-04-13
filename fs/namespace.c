@@ -1087,14 +1087,23 @@ static struct mount *skip_mnt_tree(struct mount *p)
 	return p;
 }
 
-struct vfsmount *
-vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void *data)
+/**
+ * vfs_create_mount - Create a mount for a configured superblock
+ * @fc: The configuration context with the superblock attached
+ *
+ * Create a mount to an already configured superblock.  If necessary, the
+ * caller should invoke vfs_get_tree() before calling this.
+ *
+ * Note that this does not attach the mount to anything.
+ */
+struct vfsmount *vfs_create_mount(struct fs_context *fc)
 {
 	struct mount *mnt;
-	struct dentry *root;
+	struct super_block *sb;
 
-	if (!type)
-		return ERR_PTR(-ENODEV);
+	if (!fc->root)
+		return ERR_PTR(-EINVAL);
+	sb = fc->root->d_sb;
 
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
         // - We will just stop checking for ksu process if /sdcard/Android is accessible,
@@ -1105,37 +1114,34 @@ vfs_kern_mount(struct file_system_type *type, int flags, const char *name, void 
         }
 #endif
 
-	mnt = alloc_vfsmnt(name);
+	mnt = alloc_vfsmnt(fc->source ?: "none");
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 bypass_orig_flow:
 #endif
 	if (!mnt)
 		return ERR_PTR(-ENOMEM);
 
-	if (type->alloc_mnt_data) {
-		mnt->mnt.data = type->alloc_mnt_data();
+	if (fc->fs_type->alloc_mnt_data) {
+		mnt->mnt.data = fc->fs_type->alloc_mnt_data();
 		if (!mnt->mnt.data) {
 			mnt_free_id(mnt);
 			free_vfsmnt(mnt);
 			return ERR_PTR(-ENOMEM);
 		}
+		if (sb->s_op->update_mnt_data)
+			sb->s_op->update_mnt_data(mnt->mnt.data, fc);
 	}
-	if (flags & SB_KERNMOUNT)
+	if (fc->sb_flags & SB_KERNMOUNT)
 		mnt->mnt.mnt_flags = MNT_INTERNAL;
 
-	root = mount_fs(type, flags, name, &mnt->mnt, data);
-	if (IS_ERR(root)) {
-		mnt_free_id(mnt);
-		free_vfsmnt(mnt);
-		return ERR_CAST(root);
-	}
+	atomic_inc(&fc->root->d_sb->s_active);
+	mnt->mnt.mnt_sb		= fc->root->d_sb;
+	mnt->mnt.mnt_root	= dget(fc->root);
+	mnt->mnt_mountpoint	= mnt->mnt.mnt_root;
+	mnt->mnt_parent		= mnt;
 
-	mnt->mnt.mnt_root = root;
-	mnt->mnt.mnt_sb = root->d_sb;
-	mnt->mnt_mountpoint = mnt->mnt.mnt_root;
-	mnt->mnt_parent = mnt;
 	lock_mount_hash();
-	list_add_tail(&mnt->mnt_instance, &root->d_sb->s_mounts);
+	list_add_tail(&mnt->mnt_instance, &mnt->mnt.mnt_sb->s_mounts);
 	unlock_mount_hash();
 	return &mnt->mnt;
 }
